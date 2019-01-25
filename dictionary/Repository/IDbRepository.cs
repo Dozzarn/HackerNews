@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -14,8 +15,7 @@ namespace dictionary.Repository
 
         Task<T> GetById(Guid id);
 
-        Task<T> GetByModel(T model, string findFor);
-
+         SqlConnection connection { get; }
 
     }
 }

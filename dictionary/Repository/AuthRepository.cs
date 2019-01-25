@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Dapper;
 using dictionary.Model;
 
 namespace dictionary.Repository
@@ -13,13 +14,30 @@ namespace dictionary.Repository
         {
             _dbRepository = dbRepository;
         }
+
+        private async Task<User> IsUserExists(User user)
+        {
+
+            var sql = $"select * from [user] where Username=@Search";
+            await _dbRepository.connection.OpenAsync();
+            var data = await _dbRepository.connection.QueryFirstOrDefaultAsync<User>(sql, new { Search = user.Username });
+            if (data != null)
+            {
+                return await Task.FromResult(data);
+            }
+             _dbRepository.connection.Close();
+
+            return null;
+
+
+        }
         public async Task<User> Login(string userName, string password)
         {
             var model = new User
             {
                 Username = userName
             };
-            var user = await _dbRepository.GetByModel(model,"Username");
+            var user = await IsUserExists(model);
             if (user == null)
             {
                 return null;
@@ -50,7 +68,7 @@ namespace dictionary.Repository
                 Username = userName
             };
 
-            var data = await _dbRepository.GetByModel(user,"Username");
+            var data = await IsUserExists(user);
             if (data != null)
             {
                 return await Task.FromResult(true);
