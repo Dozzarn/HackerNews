@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace dictionary.Repository
 {
-    public interface IGenericRepository<T>   where T : class 
+    public interface ICrud<T>   where T : class 
     {
         Task<T> Update(T model);
         Task<bool> Insert(T model);
