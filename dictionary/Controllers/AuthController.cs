@@ -12,15 +12,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 
 namespace dictionary.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserController : ControllerBase
+    public class AuthController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
-        public UserController(IUnitOfWork unitOfWork)
+        public AuthController(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
         }
@@ -103,13 +104,12 @@ namespace dictionary.Controllers
             {
                 return await Task.FromResult(Unauthorized());
             }
-
-            return await Task.FromResult(Ok(TokenHandler(user,userForLoginDTO.RememberMe)));
+            return await Task.FromResult(Ok(TokenHandler(user, userForLoginDTO.RememberMe)));
         }
 
 
 
-        public async Task<UserForLoginResultDTO> TokenHandler(User user, bool rememberMe)
+        private UserForLoginResultDTO TokenHandler(User user, bool rememberMe)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_unitOfWork._configuration.GetSection("AppSettings:Token").Value);
@@ -122,18 +122,17 @@ namespace dictionary.Controllers
 
 
                 }),
-                Expires = rememberMe ? DateTime.Now.AddDays(365)  : DateTime.Now.AddHours(1),
+                Expires = rememberMe ? DateTime.Now.AddDays(365) : DateTime.Now.AddHours(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha512Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var tokenString = tokenHandler.WriteToken(token);
-
-            return await Task.FromResult(new UserForLoginResultDTO
+            return new UserForLoginResultDTO
             {
                 Token = tokenString,
                 Status = true,
                 StatusInfoMessage = "Başarıyla giriş yaptınız."
-            });
+            };
         }
 
         [HttpGet]

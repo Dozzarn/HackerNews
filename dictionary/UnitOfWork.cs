@@ -11,6 +11,9 @@ namespace dictionary
 {
     public class UnitOfWork : IUnitOfWork
     {
+        //TODO:Logger
+       
+            
         private IDbConnection _connection;
         private IDbTransaction _transaction;
         public IAuthRepository _authRepository { get; set; }

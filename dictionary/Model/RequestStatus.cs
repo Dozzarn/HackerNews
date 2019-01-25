@@ -9,10 +9,8 @@ namespace dictionary.Model
     public class RequestStatus
     {
         [JsonProperty("s")]
-
         public bool Status { get; set; }
         [JsonProperty("sim")]
-
-        public string StatusInfoMessage { get; set; }
+  public string StatusInfoMessage { get; set; }
     }
 }
