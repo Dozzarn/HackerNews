@@ -15,7 +15,6 @@ namespace dictionary.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IConfiguration _configuration;
         public UserController(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;

@@ -5,6 +5,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 using dictionary.Repository;
+using Microsoft.Extensions.Configuration;
 
 namespace dictionary
 {
@@ -13,13 +14,14 @@ namespace dictionary
         private IDbConnection _connection;
         private IDbTransaction _transaction;
         public IAuthRepository _authRepository { get; set; }
-        private string connectionString = @"Data Source = (localdb)\MSSQLLocalDB;Initial Catalog = dictionary; Integrated Security = True";
+        public IConfiguration _configuration { get; set; }
         private bool disposedValue = false; // To detect redundant calls
 
 
-        public UnitOfWork()
+        public UnitOfWork(IConfiguration configuration)
         {
-            _connection = new SqlConnection(connectionString);
+            _configuration = configuration;
+            _connection = new SqlConnection(_configuration.GetSection("Appsettings:ConnectionString").Value);
             _connection.Open();
             _transaction = _connection.BeginTransaction();
             _authRepository = new AuthRepository(_transaction);

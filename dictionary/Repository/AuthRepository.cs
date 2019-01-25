@@ -4,6 +4,7 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
+using dictionary.Helpers;
 using dictionary.Model;
 
 namespace dictionary.Repository
@@ -11,8 +12,10 @@ namespace dictionary.Repository
     public class AuthRepository : BaseRepository, IAuthRepository
     {
         private readonly IGenericRepository<User> _genericRepository;
+        private RedisHandler _redis;
         public AuthRepository(IDbTransaction transaction) : base(transaction)
         {
+            _redis = new RedisHandler();
             _genericRepository = new GenericRepository<User>(transaction);
         }
 

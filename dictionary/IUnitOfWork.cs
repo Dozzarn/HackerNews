@@ -1,4 +1,5 @@
 ﻿using dictionary.Repository;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,8 @@ namespace dictionary
     public interface IUnitOfWork : IDisposable
     {
         IAuthRepository _authRepository { get; set; }
+        IConfiguration _configuration { get; set; }
+
         void Commit();
     }
 }
