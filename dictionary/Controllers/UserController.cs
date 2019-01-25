@@ -12,21 +12,20 @@ namespace dictionary.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Produces("application/json")]
     public class UserController : ControllerBase
     {
-        private readonly IAuthRepository _authRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IConfiguration _configuration;
-        public UserController(IAuthRepository authRepository)
+        public UserController(IUnitOfWork unitOfWork)
         {
-            _authRepository = authRepository;
+            _unitOfWork = unitOfWork;
         }
 
         [HttpPost("/register")]
-        public async Task<IActionResult> Register([FromBody]UserForRegisterDTO userForRegisterDTO)
+        public async Task<ActionResult<User>> Register([FromBody]UserForRegisterDTO userForRegisterDTO)
         {
 
-            if (await _authRepository.UserExits(userForRegisterDTO.Username))
+            if (await _unitOfWork._authRepository.UserExits(userForRegisterDTO.Username))
             {
                 ModelState.AddModelError("Username", "Username Already Exists");
             }
@@ -44,7 +43,7 @@ namespace dictionary.Controllers
             };
 
            
-            var createdUser = await _authRepository.Register(userToCreate, userForRegisterDTO.Password);
+            var createdUser = await _unitOfWork._authRepository.Register(userToCreate, userForRegisterDTO.Password);
             return await Task.FromResult(Ok(createdUser));
 
         }

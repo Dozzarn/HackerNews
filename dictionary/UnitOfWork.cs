@@ -12,9 +12,10 @@ namespace dictionary
     {
         private IDbConnection _connection;
         private IDbTransaction _transaction;
-        private IAuthRepository _authRepository;
+        public IAuthRepository _authRepository { get; set; }
         private string connectionString = @"Data Source = (localdb)\MSSQLLocalDB;Initial Catalog = dictionary; Integrated Security = True";
         private bool disposedValue = false; // To detect redundant calls
+
 
         public UnitOfWork()
         {

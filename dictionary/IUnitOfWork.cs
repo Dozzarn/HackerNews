@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace dictionary
 {
-    interface IUnitOfWork : IDisposable
+    public interface IUnitOfWork : IDisposable
     {
-
+        IAuthRepository _authRepository { get; set; }
         void Commit();
     }
 }
