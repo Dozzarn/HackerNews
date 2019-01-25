@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace dictionary.Repository
 {
-    public interface IGenericRepository<T> : IDisposable  where T : class 
+    public interface IGenericRepository<T>   where T : class 
     {
         Task<T> Update(T model);
         Task<bool> Insert(T model);
@@ -15,7 +15,5 @@ namespace dictionary.Repository
         Task<IEnumerable<T>> GetAll();
 
         Task<T> GetById(Guid id);
-
-        IDbTransaction _transaction { get; set; }
     }
 }

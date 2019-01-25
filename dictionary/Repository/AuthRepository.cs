@@ -20,7 +20,7 @@ namespace dictionary.Repository
         {
 
             var sql = $"select * from [user] where Username=@Search";
-            var data = await Connection.QueryFirstOrDefaultAsync<User>(sql, new { Search = user.Username }, transaction: _genericRepository._transaction);
+            var data = await Connection.QueryFirstOrDefaultAsync<User>(sql, new { Search = user.Username }, transaction: Transaction);
             if (data != null)
             {
                 return await Task.FromResult(data);

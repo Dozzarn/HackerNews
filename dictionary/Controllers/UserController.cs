@@ -22,9 +22,10 @@ namespace dictionary.Controllers
             _authRepository = authRepository;
         }
 
-        [HttpPost,Route("/register")]
+        [HttpPost("/register")]
         public async Task<IActionResult> Register([FromBody]UserForRegisterDTO userForRegisterDTO)
         {
+
             if (await _authRepository.UserExits(userForRegisterDTO.Username))
             {
                 ModelState.AddModelError("Username", "Username Already Exists");
@@ -44,7 +45,7 @@ namespace dictionary.Controllers
 
            
             var createdUser = await _authRepository.Register(userToCreate, userForRegisterDTO.Password);
-            return Ok(createdUser);
+            return await Task.FromResult(Ok(createdUser));
 
         }
 
