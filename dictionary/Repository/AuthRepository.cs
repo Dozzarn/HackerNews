@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
@@ -7,25 +8,23 @@ using dictionary.Model;
 
 namespace dictionary.Repository
 {
-    public class AuthRepository : IAuthRepository
+    public class AuthRepository : BaseRepository, IAuthRepository
     {
-        private readonly IDbRepository<User> _dbRepository;
-        public AuthRepository(IDbRepository<User> dbRepository)
+        private readonly IGenericRepository<User> _genericRepository;
+        public AuthRepository(IDbTransaction transaction) : base(transaction)
         {
-            _dbRepository = dbRepository;
+            _genericRepository = new GenericRepository<User>(transaction);
         }
 
         private async Task<User> IsUserExists(User user)
         {
 
             var sql = $"select * from [user] where Username=@Search";
-            await _dbRepository.connection.OpenAsync();
-            var data = await _dbRepository.connection.QueryFirstOrDefaultAsync<User>(sql, new { Search = user.Username });
+            var data = await Connection.QueryFirstOrDefaultAsync<User>(sql, new { Search = user.Username }, transaction: _genericRepository._transaction);
             if (data != null)
             {
                 return await Task.FromResult(data);
             }
-             _dbRepository.connection.Close();
 
             return null;
 
@@ -56,7 +55,7 @@ namespace dictionary.Repository
             user.PasswordHash = passwordHash;
             user.PasswordSalt = passwordSalt;
 
-            await _dbRepository.Insert(user);
+            await _genericRepository.Insert(user);
 
             return await Task.FromResult(user);
         }

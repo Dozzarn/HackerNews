@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace dictionary.Repository
 {
-    public interface IDbRepository<T> where T : class
+    public interface IGenericRepository<T> : IDisposable  where T : class 
     {
         Task<T> Update(T model);
         Task<bool> Insert(T model);
@@ -15,7 +16,6 @@ namespace dictionary.Repository
 
         Task<T> GetById(Guid id);
 
-         SqlConnection connection { get; }
-
+        IDbTransaction _transaction { get; set; }
     }
 }
