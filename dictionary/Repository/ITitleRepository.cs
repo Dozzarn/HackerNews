@@ -8,7 +8,7 @@ namespace dictionary.Repository
 {
     public interface ITitleRepository : ICrud<TitleDTO>
     {
-        Task VotePlus(Guid Id);
-        Task VoteMinus(Guid Id);
+        Task<RequestStatus> VotePlus(Guid Id);
+        Task<RequestStatus> VoteMinus(Guid Id);
     }
 }

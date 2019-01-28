@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
+using dictionary.Helpers;
 using dictionary.Repository;
 using Microsoft.Extensions.Configuration;
 
@@ -18,6 +19,7 @@ namespace dictionary
         private IDbTransaction _transaction;
         public IAuthRepository _authRepository { get; set; }
         public ITitleRepository _titleRepository { get; set; }
+        public RedisHandler _redisHandler { get; set; }
 
         public IConfiguration _configuration { get; set; }
         private bool disposedValue = false; // To detect redundant calls
@@ -25,6 +27,7 @@ namespace dictionary
 
         public UnitOfWork(IConfiguration configuration)
         {
+            _redisHandler = new RedisHandler();
             _configuration = configuration;
             _connection = new SqlConnection(_configuration.GetSection("Appsettings:ConnectionString").Value);
             _connection.Open();
@@ -58,6 +61,8 @@ namespace dictionary
         private void resetRepositories()
         {
             _authRepository = null;
+            _titleRepository = null;
+
         }
 
         #region IDisposable Support

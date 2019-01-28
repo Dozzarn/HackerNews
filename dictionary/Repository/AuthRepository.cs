@@ -10,11 +10,9 @@ namespace dictionary.Repository
 {
     public class AuthRepository : BaseRepository, IAuthRepository
     {
-        private RedisHandler _redis;
 
         public AuthRepository(IDbTransaction transaction) : base(transaction)
         {
-            _redis = new RedisHandler();
         }
 
         private async Task<UserDTO> IsUserExists(UserDTO user)
