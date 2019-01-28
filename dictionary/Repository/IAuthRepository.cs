@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace dictionary.Repository
 {
-    public interface IAuthRepository
+    public interface IAuthRepository : ICrud<UserDTO>
     {
-        Task<User> Register(User user, string password);
-        Task<User> Login(string userName, string password);
+        Task<UserDTO> Register(UserDTO user, string password);
+        Task<UserDTO> Login(string userName, string password);
         Task<bool> UserExits(string userName);
     }
 }

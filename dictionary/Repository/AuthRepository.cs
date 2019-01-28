@@ -8,7 +8,7 @@ using dictionary.Model;
 
 namespace dictionary.Repository
 {
-    public class AuthRepository : BaseRepository, IAuthRepository, ICrud<User>
+    public class AuthRepository : BaseRepository, IAuthRepository
     {
         private RedisHandler _redis;
 
@@ -17,11 +17,11 @@ namespace dictionary.Repository
             _redis = new RedisHandler();
         }
 
-        private async Task<User> IsUserExists(User user)
+        private async Task<UserDTO> IsUserExists(UserDTO user)
         {
 
             var sql = $"select * from [User] where Username=@Search";
-            var data = await Connection.QueryFirstOrDefaultAsync<User>(sql, new { Search = user.Username }, transaction: Transaction);
+            var data = await Connection.QueryFirstOrDefaultAsync<UserDTO>(sql, new { Search = user.Username }, transaction: Transaction);
             if (data != null)
             {
                 return await Task.FromResult(data);
@@ -31,9 +31,9 @@ namespace dictionary.Repository
 
 
         }
-        public async Task<User> Login(string userName, string password)
+        public async Task<UserDTO> Login(string userName, string password)
         {
-            var model = new User
+            var model = new UserDTO
             {
                 Username = userName
             };
@@ -49,7 +49,7 @@ namespace dictionary.Repository
             return await Task.FromResult(user);
         }
 
-        public async Task<User> Register(User user, string password)
+        public async Task<UserDTO> Register(UserDTO user, string password)
         {
             byte[] passwordHash, passwordSalt;
             CreatePasswordHash(password, out passwordHash, out passwordSalt);
@@ -66,7 +66,7 @@ namespace dictionary.Repository
 
         public async Task<bool> UserExits(string userName)
         {
-            User user = new User
+            UserDTO user = new UserDTO
             {
                 Username = userName
             };
@@ -110,7 +110,7 @@ namespace dictionary.Repository
         
 
         #region CRUD
-        public async Task<User> Update(User model)
+        public async Task<UserDTO> Update(UserDTO model)
         {
             var sql = "update [User] set Username=@name,PasswordHash=@hash,PasswordSalt=@salt where Id=@id";
 
@@ -124,7 +124,7 @@ namespace dictionary.Repository
             return null;
         }
 
-        public async Task<bool> Insert(User model)
+        public async Task<bool> Insert(UserDTO model)
         {
             var sql = "insert into [User] (Username,PasswordHash,PasswordSalt) values (@name,@hash,@salt)";
 
@@ -143,11 +143,11 @@ namespace dictionary.Repository
             throw new NotImplementedException();
         }
 
-        public async Task<IEnumerable<User>> GetAll()
+        public async Task<IEnumerable<UserDTO>> GetAll()
         {
             var sql = "select * from [User]";
 
-            var data = await Connection.QueryAsync<User>(sql, transaction: Transaction);
+            var data = await Connection.QueryAsync<UserDTO>(sql, transaction: Transaction);
             if (data != null)
             {
 
@@ -157,17 +157,17 @@ namespace dictionary.Repository
             return await Task.FromResult(data);
         }
 
-        public async Task<User> GetById(Guid id)
+        public async Task<UserDTO> GetById(Guid id)
         {
             var sql = "select * from [User] where Id=@Id";
 
-            var data = await Connection.QueryFirstOrDefaultAsync<User>(sql,new { Id=id }, transaction: Transaction);
+            var data = await Connection.QueryFirstOrDefaultAsync<UserDTO>(sql,new { Id=id }, transaction: Transaction);
             if (data != null)
             {
                 return await Task.FromResult(data);
             }
 
-            return await Task.FromResult(data);
+            return null;
         }
 
 

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace dictionary.Model
 {
-    public class User
+    public class UserDTO
     {
         public Guid Id { get; set; }
         public string Username { get; set; }

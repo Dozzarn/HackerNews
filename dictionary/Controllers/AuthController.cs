@@ -62,7 +62,7 @@ namespace dictionary.Controllers
             {
                 return await Task.FromResult(Ok(ModelState));
             }
-            var userToCreate = new User
+            var userToCreate = new UserDTO
             {
                 Username = userForRegisterDTO.Username,
             };
@@ -109,7 +109,7 @@ namespace dictionary.Controllers
 
 
 
-        private UserForLoginResultDTO TokenHandler(User user, bool rememberMe)
+        private UserForLoginResultDTO TokenHandler(UserDTO user, bool rememberMe)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_unitOfWork._configuration.GetSection("AppSettings:Token").Value);
