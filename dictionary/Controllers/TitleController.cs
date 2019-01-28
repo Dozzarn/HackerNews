@@ -76,35 +76,33 @@ namespace dictionary.Controllers
             var isCached = await _unitOfWork._redisHandler.IsCached(key);
             if (isCached == false)
             {
-                var data = await _unitOfWork._titleRepository.GetById(guid);
-                await _unitOfWork._redisHandler.AddToCache(key, TimeSpan.FromMinutes(10), JsonConvert.SerializeObject(data));
+                var title = await _unitOfWork._titleRepository.GetById(guid);
+                var entries = await _unitOfWork._entryRepository.GetAllEntryForTitle(guid);
 
-                if (data != null)
+                if (title != null)
                 {
-
-                    return await Task.FromResult(new TitleForGetDTO
+                    var result = new TitleForGetDTO
                     {
-                        Title = data,
+                        Title = title,
+                        Entries = entries,
                         Status = true,
                         StatusInfoMessage = "Başarılı"
-                    });
+                    };
+                    await _unitOfWork._redisHandler.AddToCache(key, TimeSpan.FromMinutes(10), JsonConvert.SerializeObject(result));
+
+                    return await Task.FromResult(result);
                 }
                 return await Task.FromResult(new TitleForGetDTO
                 {
-                    Title = data,
+                    Title = title,
                     Status = false,
                     StatusInfoMessage = "Başarısız"
                 });
             }
             else
             {
-                var data = JsonConvert.DeserializeObject<TitleDTO>(await _unitOfWork._redisHandler.GetFromCache(key));
-                return await Task.FromResult(new TitleForGetDTO
-                {
-                    Title = data,
-                    Status = true,
-                    StatusInfoMessage = "Başarılı"
-                });
+                var result = JsonConvert.DeserializeObject<TitleForGetDTO>(await _unitOfWork._redisHandler.GetFromCache(key));
+                return await Task.FromResult(result);
             }
 
         }

@@ -20,6 +20,7 @@ namespace dictionary
         public IAuthRepository _authRepository { get; set; }
         public ITitleRepository _titleRepository { get; set; }
         public RedisHandler _redisHandler { get; set; }
+        public IEntryRepository _entryRepository { get; set; }
 
         public IConfiguration _configuration { get; set; }
         private bool disposedValue = false; // To detect redundant calls
@@ -32,8 +33,17 @@ namespace dictionary
             _connection = new SqlConnection(_configuration.GetSection("Appsettings:ConnectionString").Value);
             _connection.Open();
             _transaction = _connection.BeginTransaction();
+
+
+
+
+
+
+
+
             _authRepository = new AuthRepository(_transaction);
             _titleRepository = new TitleRepository(_transaction);
+            _entryRepository = new EntryRepository(_transaction);
 
         }
 

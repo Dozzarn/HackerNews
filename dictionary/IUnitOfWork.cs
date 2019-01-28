@@ -12,6 +12,9 @@ namespace dictionary
     {
         IAuthRepository _authRepository { get; set; }
         ITitleRepository _titleRepository { get; set; }
+
+        IEntryRepository _entryRepository { get; set; }
+
         RedisHandler _redisHandler { get; set; }
 
  

@@ -10,5 +10,7 @@ namespace dictionary.Model
     {
         [JsonProperty("t")]
         public TitleDTO Title { get; set; }
+        public IEnumerable<EntryDTO> Entries { get; set; }
+
     }
 }
