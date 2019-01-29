@@ -6,15 +6,14 @@ using System.Threading.Tasks;
 
 namespace dictionary.Model
 {
-    public class UserForRegisterDTO
+    public class UserForLoginDTO
     {
         [JsonProperty("u")]
         public string Username { get; set; }
-        [JsonProperty("e")]
-        public string Email { get; set; }
         [JsonProperty("p")]
         public string Password { get; set; }
-        [JsonProperty("pa")]
-        public string PasswordAgain { get; set; }
+        [JsonProperty("rm")]
+        public bool RememberMe { get; set; }
+
     }
 }

@@ -45,8 +45,7 @@ namespace dictionary
             });
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
-            services.AddScoped(typeof(IDbRepository<>), typeof(DbRepository<>));
-            services.AddScoped<IAuthRepository, AuthRepository>();
+            services.AddScoped<IUnitOfWork,UnitOfWork>();
 
             
 
