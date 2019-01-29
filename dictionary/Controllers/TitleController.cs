@@ -69,6 +69,11 @@ namespace dictionary.Controllers
 
         }
 
+        /// <summary>
+        /// Get Title
+        /// </summary>
+        /// <param name="guid"></param>
+        /// <returns></returns>
         [HttpPost("get")]
         public async Task<TitleForGetDTO> Get([FromBody]Guid guid)
         {
@@ -106,5 +111,7 @@ namespace dictionary.Controllers
             }
 
         }
+
+        
     }
 }

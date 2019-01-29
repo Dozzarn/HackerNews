@@ -12,8 +12,11 @@ namespace dictionary.Model
         public Guid TitleId { get; set; }
         [JsonProperty("t")]
         public string Title { get; set; }
+        [JsonProperty("ui")]
+        public Guid UserId { get; set; }
         [JsonProperty("u")]
         public string Username { get; set; }
+
         [JsonProperty("ei")]
         public Guid EntryId { get; set; }
         [JsonProperty("e")]

@@ -17,8 +17,9 @@ namespace dictionary.Model
 
         public DateTime Time { get; set; }
 
+        [JsonProperty("ui")]
+        public Guid UserId { get; set; }
         [JsonProperty("u")]
-
         public string Username { get; set; }
 
         [JsonProperty("ti")]

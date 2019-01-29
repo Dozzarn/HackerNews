@@ -129,9 +129,9 @@ namespace dictionary.Repository
 
         public async Task<TitleDTO> Update(TitleDTO model)
         {
-            var sql = "update [Title] set Title=@title,Username=@user,Time=@time,Category=@cat,VoteMinus=@minus,VotePlus=@plus";
+            var sql = "update [Title] set Title=@title,UserId=@ui,Time=@time,Category=@cat,VoteMinus=@minus,VotePlus=@plus where TitleId=@id";
 
-            var updatedModel = await Connection.ExecuteAsync(sql, new { title = model.Title, user = model.Username, time = model.Time, cat = model.Category, minus = model.VoteMinus, plus = model.VotePlus });
+            var updatedModel = await Connection.ExecuteAsync(sql, new { title = model.Title, ui = model.UserId, time = model.Time, cat = model.Category, minus = model.VoteMinus, plus = model.VotePlus,id=model.TitleId },transaction:Transaction);
 
             if (updatedModel != 0)
             {
