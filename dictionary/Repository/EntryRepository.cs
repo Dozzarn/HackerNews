@@ -15,13 +15,15 @@ namespace dictionary.Repository
 
         }
 
-
-        public async Task<RequestStatus> VoteMinus(Guid Id)
+        //TODO: AUTHORİZE 
+        public async Task<RequestStatus> VoteMinus(Guid Id, bool isVoted)
         {
             var data = await GetById(Id);
 
             if (data != null)
             {
+                if (isVoted == true)
+                    data.VotePlus -= 1;
                 data.VoteMinus += 1;
                 await Update(data);
                 return await Task.FromResult(new RequestStatus
@@ -37,12 +39,14 @@ namespace dictionary.Repository
             });
         }
 
-        public async Task<RequestStatus> VotePlus(Guid Id)
+        public async Task<RequestStatus> VotePlus(Guid Id, bool isVoted)
         {
             var data = await GetById(Id);
 
             if (data != null)
             {
+                if (isVoted == true)
+                    data.VoteMinus -= 1;
                 data.VotePlus += 1;
                 await Update(data);
                 return await Task.FromResult(new RequestStatus
@@ -71,6 +75,57 @@ namespace dictionary.Repository
 
             return null;
         }
+        public async Task<bool> AddToVoted(Guid UserId, Guid EntryId, bool vote)
+        {
+            var sql = "insert into [Voted] (UserId,EntryId,IsVotedPlus,IsVotedMinus) values(@ui,@ei,@ivp,@ivm)";
+            var result = await Connection.ExecuteAsync(sql, new { ui = UserId, ei = EntryId, ivp = vote == true ? true : false, ivm = vote == true ? false : true }, transaction: Transaction);
+            if (result != 0)
+            {
+                return await Task.FromResult(true);
+            }
+            return await Task.FromResult(false);
+        }
+        public async Task<bool> UpdateToVoted(Guid UserId, Guid EntryId, bool vote)
+        {
+            var sql = "update [Voted] set  IsVotedPlus=@ivp,IsVotedMinus=@ivm where UserId=@ui and EntryId=@ei";
+            var result = await Connection.ExecuteAsync(sql, new { ivp = vote == true ? true : false, ivm = vote == true ? false : true,ui = UserId,ei = EntryId }, transaction: Transaction);
+            if (result != 0)
+            {
+                return await Task.FromResult(true);
+            }
+            return await Task.FromResult(false);
+
+        }
+        public async Task<RequestStatus> CheckForVote(Guid Id)
+        {
+            var sql = "select * from [Voted] where EntryId=@ei";
+            var data = await Connection.QueryFirstOrDefaultAsync<VotedDTO>(sql, new { ei = Id }, transaction: Transaction);
+            if (data != null)
+            {
+                if (data.IsVotedMinus == true)
+                {
+                    return await Task.FromResult(new RequestStatus
+                    {
+                        Status = true,
+                        StatusInfoMessage = "Eksi"
+                    });
+                }
+                else if (data.IsVotedPlus == true)
+                {
+                    return await Task.FromResult(new RequestStatus
+                    {
+                        Status = true,
+                        StatusInfoMessage = "Artı"
+                    });
+                }
+
+            }
+            return await Task.FromResult(new RequestStatus
+            {
+                Status = true,
+                StatusInfoMessage = "Boş"
+            });
+        }
 
         #region CRUD
         public Task<bool> Delete(Guid id)
@@ -83,7 +138,7 @@ namespace dictionary.Repository
             throw new NotImplementedException();
         }
 
-        
+
 
         public async Task<EntryDTO> GetById(Guid id)
         {
@@ -116,6 +171,8 @@ namespace dictionary.Repository
             }
             return null;
         }
+
+
         #endregion
     }
 }

@@ -3,7 +3,9 @@ using dictionary.Repository;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace dictionary
@@ -12,7 +14,7 @@ namespace dictionary
     {
         IAuthRepository _authRepository { get; set; }
         ITitleRepository _titleRepository { get; set; }
-
+        JwtSecurityTokenHandler _tokenHandler { get; set; }
         IEntryRepository _entryRepository { get; set; }
 
         RedisHandler _redisHandler { get; set; }

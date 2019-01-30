@@ -9,7 +9,11 @@ namespace dictionary.Repository
     public interface IEntryRepository :ICrud<EntryDTO>
     {
         Task<IEnumerable<EntryDTO>> GetAllEntryForTitle(Guid Id);
-        Task<RequestStatus> VotePlus(Guid Id);
-        Task<RequestStatus> VoteMinus(Guid Id);
+        Task<RequestStatus> VotePlus(Guid Id,bool isVoted);
+        Task<RequestStatus> CheckForVote(Guid model);
+        Task<bool> AddToVoted(Guid UserId, Guid EntryId, bool vote);
+        Task<bool> UpdateToVoted(Guid UserId, Guid EntryId, bool vote);
+
+        Task<RequestStatus> VoteMinus(Guid Id, bool isVoted);
     }
 }

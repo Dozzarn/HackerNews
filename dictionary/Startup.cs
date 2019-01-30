@@ -30,6 +30,23 @@ namespace dictionary
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("CoreSwagger", new Info
+                {
+                    Title = "Swagger on ASP.NET Core",
+                    Version = "1.0.0",
+                    Description = "Try Swagger on (ASP.NET Core 2.1)",
+                    Contact = new Contact()
+                    {
+                        Name = "Swagger Implementation Dogukan Urhan",
+                        Url = "http://dogukanurhan.com",
+                        Email = "bora@borakasmer.com"
+                    },
+                    TermsOfService = "http://swagger.io/terms/"
+                });
+            });
+
             var key = Encoding.ASCII.GetBytes(Configuration.GetSection("Appsettings:Token").Value);
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(opt => {
 
@@ -44,22 +61,7 @@ namespace dictionary
                 };
 
             });
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("CoreSwagger", new Info
-                {
-                    Title = "Swagger on ASP.NET Core",
-                    Version = "1.0.0",
-                    Description = "Try Swagger on (ASP.NET Core 2.1)",
-                    Contact = new Contact()
-                    {
-                        Name = "Swagger Implementation Bora kasmer",
-                        Url = "http://borakasmer.com",
-                        Email = "bora@borakasmer.com"
-                    },
-                    TermsOfService = "http://swagger.io/terms/"
-                });
-            });
+           
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             services.AddScoped<IUnitOfWork,UnitOfWork>();

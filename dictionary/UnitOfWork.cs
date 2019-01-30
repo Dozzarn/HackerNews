@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using dictionary.Helpers;
 using dictionary.Repository;
@@ -23,6 +25,8 @@ namespace dictionary
         public IEntryRepository _entryRepository { get; set; }
 
         public IConfiguration _configuration { get; set; }
+        public JwtSecurityTokenHandler _tokenHandler { get; set; }
+
         private bool disposedValue = false; // To detect redundant calls
 
 
@@ -39,8 +43,7 @@ namespace dictionary
 
 
 
-
-
+            _tokenHandler = new JwtSecurityTokenHandler();
             _authRepository = new AuthRepository(_transaction);
             _titleRepository = new TitleRepository(_transaction);
             _entryRepository = new EntryRepository(_transaction);
@@ -72,6 +75,7 @@ namespace dictionary
         {
             _authRepository = null;
             _titleRepository = null;
+            _entryRepository = null;
 
         }
 
