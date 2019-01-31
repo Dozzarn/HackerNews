@@ -79,7 +79,7 @@ namespace dictionary.Controllers
                 throw;
             }
         }
-
+        //TODO:CHANGE NECESSARY SQL QUERY TO GETALL().WHERE BLA BLA BLA
         private bool Check()
         {
             var accesToken = Request.Headers["Authorization"];
