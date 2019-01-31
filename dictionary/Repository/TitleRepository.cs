@@ -16,52 +16,17 @@ namespace dictionary.Repository
         }
 
 
-        public async Task<RequestStatus> VoteMinus(Guid Id)
+        public async Task<TitleDTO> IsBinded(Guid Id)
         {
-            var data = await GetById(Id);
-
+            var sql = "select * from [Title] where EntryId=@id";
+            var data = await Connection.QueryFirstOrDefaultAsync<TitleDTO>(sql,new { id=Id },transaction:Transaction);
             if (data != null)
             {
-                data.VotePlus -= 1;
-                await Update(data);
-                return await Task.FromResult(new RequestStatus
-                {
-                    Status = true,
-                    StatusInfoMessage = "Başarılı"
-                });
+                return await Task.FromResult(data);
             }
-            return await Task.FromResult(new RequestStatus
-            {
-                Status = false,
-                StatusInfoMessage = "Başarısız"
-            });
-        }
-
-        public async Task<RequestStatus> VotePlus(Guid Id)
-        {
-            var data = await GetById(Id);
-
-            if (data != null)
-            {
-                data.VotePlus += 1;
-                await Update(data);
-                return await Task.FromResult(new RequestStatus
-                {
-                    Status = true,
-                    StatusInfoMessage = "Başarılı"
-                });
-            }
-            return await Task.FromResult(new RequestStatus
-            {
-                Status = false,
-                StatusInfoMessage = "Başarısız"
-            });
+            return null;
 
         }
-
-
-
-
         private async Task<TitleDTO> IsTitleExists(TitleDTO title)
         {
 
@@ -80,12 +45,12 @@ namespace dictionary.Repository
         #region CRUD
 
 
-        public Task<bool> Delete(Guid id)
+        public Task<bool> DeleteAsync(Guid id)
         {
             throw new NotImplementedException();
         }
 
-        public async Task<IEnumerable<TitleDTO>> GetAll()
+        public async Task<IEnumerable<TitleDTO>> GetAllAsync()
         {
             var sql = "select a.*,b.Entry from [Title] a inner join [Entry] b on a.EntryId=b.EntryId";
 
@@ -98,7 +63,7 @@ namespace dictionary.Repository
             return null;
         }
 
-        public async Task<TitleDTO> GetById(Guid id)
+        public async Task<TitleDTO> GetByIdAsync(Guid id)
         {
             var sql = "select * from [Title] where TitleId=@Id";
 
@@ -113,7 +78,7 @@ namespace dictionary.Repository
 
         }
 
-        public async Task<bool> Insert(TitleDTO model)
+        public async Task<bool> InsertAsync(TitleDTO model)
         {
             var sql = "insert into [Title] (Title,Username,Time,Category) values (@title,@user,@time,@cat)";
 
@@ -127,11 +92,11 @@ namespace dictionary.Repository
 
         }
 
-        public async Task<TitleDTO> Update(TitleDTO model)
+        public async Task<TitleDTO> UpdateAsync(TitleDTO model)
         {
-            var sql = "update [Title] set Title=@title,UserId=@ui,Time=@time,Category=@cat,VoteMinus=@minus,VotePlus=@plus where TitleId=@id";
-
-            var updatedModel = await Connection.ExecuteAsync(sql, new { title = model.Title, ui = model.UserId, time = model.Time, cat = model.Category, minus = model.VoteMinus, plus = model.VotePlus,id=model.TitleId },transaction:Transaction);
+            var sql = "update [Title] set Title=@title,UserId=@ui,Time=@time,Category=@cat,VoteMinus=@minus,VotePlus=@plus,EntryId=@ei where TitleId=@id";
+            
+            var updatedModel = await Connection.ExecuteAsync(sql, new { title = model.Title, ui = model.UserId, time = model.Time, cat = model.Category,ei=model.EntryId, minus = model.VoteMinus, plus = model.VotePlus,id=model.TitleId },transaction:Transaction);
 
             if (updatedModel != 0)
             {
@@ -139,6 +104,39 @@ namespace dictionary.Repository
             }
             return  null;
 
+        }
+
+        public IEnumerable<TitleDTO> GetAll()
+        {
+            var sql = "select a.*,b.Entry from [Title] a inner join [Entry] b on a.EntryId=b.EntryId";
+
+            var data =  Connection.Query<TitleDTO>(sql, transaction: Transaction);
+
+            if (data != null)
+            {
+                return data;
+            }
+            return null;
+        }
+
+        public TitleDTO Update(TitleDTO model)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Insert(TitleDTO model)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Delete(Guid id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public TitleDTO GetById(Guid id)
+        {
+            throw new NotImplementedException();
         }
         #endregion
 

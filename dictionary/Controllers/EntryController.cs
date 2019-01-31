@@ -7,6 +7,7 @@ using dictionary.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Primitives;
 
 namespace dictionary.Controllers
 {
@@ -17,26 +18,97 @@ namespace dictionary.Controllers
 
         private readonly IUnitOfWork _unitOfWork;
         private bool checkResult;
+        private JwtSecurityToken userdata;
         public EntryController(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
         }
        
-        [HttpPost("voteplus")]
-        public async Task<RequestStatus> VotePlus([FromBody] Guid Id)
+        [HttpPost("delete")]
+        public async Task<RequestStatus> DeleteEntry([FromBody] Guid Id)
         {
             try
             {
-                var accesToken = Request.Headers["Authorization"];
-                if (accesToken.ToString() == null)
+                if (!Check())
                 {
-                     return await Task.FromResult(new RequestStatus
+                    return await Task.FromResult(new RequestStatus
                     {
                         Status = false,
                         StatusInfoMessage = "Kullanıcı Girişi Yapınız"
                     });
                 }
-                var userdata = _unitOfWork._tokenHandler.ReadToken(accesToken) as JwtSecurityToken;
+                if (Id != null)
+                {
+                    var isBinded = await _unitOfWork._titleRepository.IsBinded(Id);
+                    if (isBinded != null)
+                    {
+                        var data = _unitOfWork._entryRepository.GetAll().OrderBy(x=> x.Time).Where(x=> x.TitleId == isBinded.TitleId).ToList();
+                        var second = data.ElementAt(1);
+                        isBinded.EntryId = second.EntryId;
+                        await _unitOfWork._titleRepository.UpdateAsync(isBinded);
+                        await _unitOfWork._entryRepository.DeleteAsync(Id);
+                    }
+                    else
+                    {
+                        await _unitOfWork._entryRepository.DeleteAsync(Id);
+                    }
+                    _unitOfWork.Commit();
+                    return await Task.FromResult(new RequestStatus
+                    {
+                        Status = true,
+                        StatusInfoMessage = "İşlem Başarılı"
+                    });
+                    
+                }
+                else
+                {
+                    return await Task.FromResult(new RequestStatus
+                    {
+                        Status = false,
+                        StatusInfoMessage = "Id Eksik"
+                    });
+                }
+            }
+            catch (Exception)
+            {
+                return await Task.FromResult(new RequestStatus
+                {
+                    Status = false,
+                    StatusInfoMessage = "Bir Sorunla Karşılaşıldı"
+                });
+                throw;
+            }
+        }
+
+        private bool Check()
+        {
+            var accesToken = Request.Headers["Authorization"];
+            if (accesToken.ToString() == null)
+            {
+                return false;
+            }
+            userdata = _unitOfWork._tokenHandler.ReadToken(accesToken) as JwtSecurityToken;
+            return true;
+        }
+
+        /// <summary>
+        /// Vote Plus
+        /// </summary>
+        /// <param name="Id"></param>
+        /// <returns></returns>
+        [HttpPost("voteplus")]
+        public async Task<RequestStatus> VotePlus([FromBody] Guid Id)
+        {
+            try
+            {
+                if (!Check())
+                {
+                    return new RequestStatus
+                    {
+                        Status = false,
+                        StatusInfoMessage = "Kullanıcı Girişi Yapınız"
+                    };
+                }
                 if (Id != null)
                 {
                     
@@ -112,24 +184,27 @@ namespace dictionary.Controllers
             }
         }
 
+        /// <summary>
+        /// Vote Minus
+        /// </summary>
+        /// <param name="Id"></param>
+        /// <returns></returns>
         [HttpPost("voteminus")]
         public async Task<RequestStatus> VoteMinus([FromBody] Guid Id)
         {
             try
             {
-                var accesToken = Request.Headers["Authorization"];
-                if (accesToken.ToString() == null)
+                if (!Check())
                 {
-                    return await Task.FromResult(new RequestStatus
+                    return new RequestStatus
                     {
                         Status = false,
                         StatusInfoMessage = "Kullanıcı Girişi Yapınız"
-                    });
+                    };
                 }
 
                 if (Id != null)
                 {
-                    var userdata = _unitOfWork._tokenHandler.ReadToken(accesToken) as JwtSecurityToken;
                     var checkVote = await _unitOfWork._entryRepository.CheckForVote(Id);
                     if (checkVote.Status)
                     {

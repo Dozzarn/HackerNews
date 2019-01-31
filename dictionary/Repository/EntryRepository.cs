@@ -18,14 +18,14 @@ namespace dictionary.Repository
         //TODO: AUTHORİZE 
         public async Task<RequestStatus> VoteMinus(Guid Id, bool isVoted)
         {
-            var data = await GetById(Id);
+            var data = await GetByIdAsync(Id);
 
             if (data != null)
             {
                 if (isVoted == true)
                     data.VotePlus -= 1;
                 data.VoteMinus += 1;
-                await Update(data);
+                await UpdateAsync(data);
                 return await Task.FromResult(new RequestStatus
                 {
                     Status = true,
@@ -41,14 +41,14 @@ namespace dictionary.Repository
 
         public async Task<RequestStatus> VotePlus(Guid Id, bool isVoted)
         {
-            var data = await GetById(Id);
+            var data = await GetByIdAsync(Id);
 
             if (data != null)
             {
                 if (isVoted == true)
                     data.VoteMinus -= 1;
                 data.VotePlus += 1;
-                await Update(data);
+                await UpdateAsync(data);
                 return await Task.FromResult(new RequestStatus
                 {
                     Status = true,
@@ -128,19 +128,27 @@ namespace dictionary.Repository
         }
 
         #region CRUD
-        public Task<bool> Delete(Guid id)
+        public async Task<bool> DeleteAsync(Guid id)
+        {
+            var sql = "delete from [Entry] where EntryId=@ei";
+
+            var data = await Connection.ExecuteAsync(sql, new { ei = id }, transaction: Transaction);
+            if (data != 0)
+            {
+                return await Task.FromResult(true);
+            }
+            return await Task.FromResult(false);
+
+        }
+
+        public Task<IEnumerable<EntryDTO>> GetAllAsync()
         {
             throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<EntryDTO>> GetAll()
-        {
-            throw new NotImplementedException();
-        }
 
 
-
-        public async Task<EntryDTO> GetById(Guid id)
+        public async Task<EntryDTO> GetByIdAsync(Guid id)
         {
             var sql = "select * from [Entry] where EntryId=@Id";
 
@@ -154,12 +162,12 @@ namespace dictionary.Repository
             return null;
         }
 
-        public Task<bool> Insert(EntryDTO model)
+        public Task<bool> InsertAsync(EntryDTO model)
         {
             throw new NotImplementedException();
         }
 
-        public async Task<EntryDTO> Update(EntryDTO model)
+        public async Task<EntryDTO> UpdateAsync(EntryDTO model)
         {
             var sql = "update [Entry] set Entry=@e,UserId=@user,Time=@time,VoteMinus=@minus,VotePlus=@plus where EntryId=@ei";
 
@@ -171,6 +179,40 @@ namespace dictionary.Repository
             }
             return null;
         }
+
+        public IEnumerable<EntryDTO> GetAll()
+        {
+            var sql = "select * from [Entry]";
+
+            var data = Connection.Query<EntryDTO>(sql, transaction: Transaction);
+
+            if (data != null)
+            {
+                return data;
+            }
+            return null;
+        }
+
+        public EntryDTO Update(EntryDTO model)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Insert(EntryDTO model)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Delete(Guid id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public EntryDTO GetById(Guid id)
+        {
+            throw new NotImplementedException();
+        }
+
 
 
         #endregion

@@ -31,7 +31,7 @@ namespace dictionary.Controllers
             var isCached = await _unitOfWork._redisHandler.IsCached(allTitleData);
             if (isCached == false)
             {
-                var data = await _unitOfWork._titleRepository.GetAll();
+                var data = await _unitOfWork._titleRepository.GetAllAsync();
                 if (data != null)
                 {
                     await _unitOfWork._redisHandler.AddToCache(allTitleData, TimeSpan.FromMinutes(10), JsonConvert.SerializeObject(data));
@@ -81,7 +81,7 @@ namespace dictionary.Controllers
             var isCached = await _unitOfWork._redisHandler.IsCached(key);
             if (isCached == false)
             {
-                var title = await _unitOfWork._titleRepository.GetById(guid);
+                var title = await _unitOfWork._titleRepository.GetByIdAsync(guid);
                 var entries = await _unitOfWork._entryRepository.GetAllEntryForTitle(guid);
 
                 if (title != null)
