@@ -107,20 +107,22 @@ namespace dictionary.Repository
 
         public async Task<TotalActivityDTO> GetTotals(Guid UserId)
         {
-            var sql1 = "select count(*) from [Entry] where UserId=@id";//total entry
-            var sql2 = "select count(*) from [Title] where UserId=@id";//total title
+            var sql1 = "select * from [Entry] a inner join [User] b on a.UserId=b.Id where UserId=@id";//total entry
+            var sql2 = "select * from [Title] a inner join [User] b on a.UserId=b.Id inner join [Entry] c on a.EntryId=c.EntryId where a.UserId=@id";//total title
             var sql3 = "select count(*) from [Voted] where UserId=@id and IsVotedMinus=@ivm";//total minus
             var sql4 = "select count(*) from [Voted] where UserId=@id and IsVotedPlus=@ivp";//total plus
-            var te = await Connection.QueryAsync<int>(sql1, new { id = UserId }, transaction: Transaction);
-            var tt = await Connection.QueryAsync<int>(sql2, new { id = UserId }, transaction: Transaction);
+            var e = await Connection.QueryAsync<EntryDTO>(sql1, new { id = UserId }, transaction: Transaction);
+            var t = await Connection.QueryAsync<TitleDTO>(sql2, new { id = UserId }, transaction: Transaction);
             var tm = await Connection.QueryAsync<int>(sql3, new { id = UserId,ivm=true}, transaction: Transaction);
             var tp = await Connection.QueryAsync<int>(sql4, new { id = UserId,ivp=true }, transaction: Transaction);
             return await Task.FromResult(new TotalActivityDTO
             {
-                TotalEntry = te,
+                EntryList = e,
                 TotalMinus = tm,
                 TotalPlus = tp,
-                TotalTitle = tt
+                TitleList = t,
+                Status=true,
+                StatusInfoMessage="Başarılı"
             });
 
         }

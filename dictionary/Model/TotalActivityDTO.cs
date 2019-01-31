@@ -8,14 +8,14 @@ namespace dictionary.Model
 {
     public class TotalActivityDTO :RequestStatus
     {
-           [JsonProperty("te")]
-        public IEnumerable<int> TotalEntry { get; set; }
+       [JsonProperty("el")]
+        public IEnumerable<EntryDTO> EntryList { get; set; }
         [JsonProperty("tp")]
         public IEnumerable<int> TotalPlus { get; set; }
         [JsonProperty("tm")]
         public IEnumerable<int> TotalMinus { get; set; }
-        [JsonProperty("tt")]
-        public IEnumerable<int> TotalTitle { get; set; }
+        [JsonProperty("tl")]
+        public IEnumerable<TitleDTO> TitleList { get; set; }
     }
 
 }
