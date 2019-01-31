@@ -157,9 +157,16 @@ namespace dictionary.Repository
             return await Task.FromResult(false);
         }
 
-        public Task<bool> Delete(Guid id)
+        public async Task<bool> Delete(Guid id)
         {
-            throw new NotImplementedException();
+            var sql = "delete from [User] where Id=@Id";
+            var data = await Connection.ExecuteAsync(sql, new { Id = id },transaction:Transaction);
+            if (data != 0)
+            {
+                return await Task.FromResult(true);
+            }
+            return await Task.FromResult(false);
+
         }
 
         public async Task<IEnumerable<UserDTO>> GetAll()
