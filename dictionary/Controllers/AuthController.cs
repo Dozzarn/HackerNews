@@ -108,6 +108,21 @@ namespace dictionary.Controllers
         }
 
 
+        [HttpGet("useractivity")]
+        public async Task<TotalActivityDTO> UserActivity()
+        {
+            var accesToken = Request.Headers["Authorization"];
+            if (accesToken.ToString() == null)
+            {
+                return await Task.FromResult(new TotalActivityDTO
+                {
+                    Status = false,
+                    StatusInfoMessage = "Kullanıcı Girişi Yapınız"
+                }); 
+            }
+            var userdata = _unitOfWork._tokenHandler.ReadToken(accesToken) as JwtSecurityToken;
+            return await Task.FromResult(await _unitOfWork._authRepository.GetTotals(new Guid(userdata.Claims.First(x => x.Type == "nameid").Value)));
+        }
 
         private UserForLoginResultDTO TokenHandler(UserDTO user, bool rememberMe)
         {

@@ -36,10 +36,11 @@ namespace dictionary.Controllers
                         StatusInfoMessage = "Kullanıcı Girişi Yapınız"
                     });
                 }
+                var userdata = _unitOfWork._tokenHandler.ReadToken(accesToken) as JwtSecurityToken;
                 if (Id != null)
                 {
                     
-                    var userdata = _unitOfWork._tokenHandler.ReadToken(accesToken) as JwtSecurityToken;
+                    
 
                     var checkVote = await _unitOfWork._entryRepository.CheckForVote(Id);
                     if (checkVote.Status)

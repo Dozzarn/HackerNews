@@ -105,7 +105,26 @@ namespace dictionary.Repository
             return true;
         }
 
-        
+        public async Task<TotalActivityDTO> GetTotals(Guid UserId)
+        {
+            var sql1 = "select count(*) from [Entry] where UserId=@id";//total entry
+            var sql2 = "select count(*) from [Title] where UserId=@id";//total title
+            var sql3 = "select count(*) from [Voted] where UserId=@id and IsVotedMinus=@ivm";//total minus
+            var sql4 = "select count(*) from [Voted] where UserId=@id and IsVotedPlus=@ivp";//total plus
+            var te = await Connection.QueryAsync<int>(sql1, new { id = UserId }, transaction: Transaction);
+            var tt = await Connection.QueryAsync<int>(sql2, new { id = UserId }, transaction: Transaction);
+            var tm = await Connection.QueryAsync<int>(sql3, new { id = UserId,ivm=true}, transaction: Transaction);
+            var tp = await Connection.QueryAsync<int>(sql4, new { id = UserId,ivp=true }, transaction: Transaction);
+            return await Task.FromResult(new TotalActivityDTO
+            {
+                TotalEntry = te,
+                TotalMinus = tm,
+                TotalPlus = tp,
+                TotalTitle = tt
+            });
+
+        }
+
 
         #region CRUD
         public async Task<UserDTO> Update(UserDTO model)
@@ -167,6 +186,8 @@ namespace dictionary.Repository
 
             return null;
         }
+
+       
 
 
         #endregion
