@@ -27,6 +27,9 @@ namespace dictionary.Controllers
         [HttpPost("delete")]
         public async Task<RequestStatus> DeleteEntry([FromBody] Guid Id)
         {
+
+            TitleDTO isUpdated = new TitleDTO();
+            bool isDeleted;
             try
             {
                 if (!Check())
@@ -42,22 +45,45 @@ namespace dictionary.Controllers
                     var isBinded = await _unitOfWork._titleRepository.IsBinded(Id);
                     if (isBinded != null)
                     {
-                        var data = _unitOfWork._entryRepository.GetAll().OrderBy(x=> x.Time).Where(x=> x.TitleId == isBinded.TitleId).ToList();
-                        var second = data.ElementAt(1);
-                        isBinded.EntryId = second.EntryId;
-                        await _unitOfWork._titleRepository.UpdateAsync(isBinded);
-                        await _unitOfWork._entryRepository.DeleteAsync(Id);
+                        var list = await _unitOfWork._entryRepository.GetAllAsync();
+                        var data = list.OrderBy(x => x.Time).Where(x => x.TitleId == isBinded.TitleId).ToList();
+                        if (data != null)
+                        {
+                            var second = data.ElementAt(1);
+                            isBinded.EntryId = second.EntryId;
+                             isUpdated= await _unitOfWork._titleRepository.UpdateAsync(isBinded);
+                             isDeleted = await _unitOfWork._entryRepository.DeleteAsync(Id);
+                        }
+                        else
+                        {
+                            return await Task.FromResult(new RequestStatus
+                            {
+                                Status = false,
+                                StatusInfoMessage = "Kayıt Bulunamadı"
+                            });
+                        }
                     }
                     else
                     {
-                        await _unitOfWork._entryRepository.DeleteAsync(Id);
+                        isDeleted = await _unitOfWork._entryRepository.DeleteAsync(Id);
                     }
-                    _unitOfWork.Commit();
-                    return await Task.FromResult(new RequestStatus
+                    if (isDeleted == true || isUpdated.TitleId != Guid.Empty)
                     {
-                        Status = true,
-                        StatusInfoMessage = "İşlem Başarılı"
-                    });
+                        _unitOfWork.Commit();
+                        return await Task.FromResult(new RequestStatus
+                        {
+                            Status = true,
+                            StatusInfoMessage = "İşlem Başarılı"
+                        });
+                    }
+                    else
+                    {
+                        return await Task.FromResult(new RequestStatus
+                        {
+                            Status = false,
+                            StatusInfoMessage = "Kayıt Bulunamadı"
+                        });
+                    }
                     
                 }
                 else
