@@ -1,6 +1,7 @@
 ﻿using dictionary.Helpers;
 using dictionary.Repository;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Primitives;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -18,10 +19,13 @@ namespace dictionary
         IEntryRepository _entryRepository { get; set; }
         IGenericRepository<T> _genericRepository { get; set; }
         RedisHandler _redisHandler { get; set; }
-
- 
+        JwtSecurityToken userdata { get; set; }
         IConfiguration _configuration { get; set; }
 
+
+
+
+        bool Check(StringValues token);
         void Commit();
     }
 }

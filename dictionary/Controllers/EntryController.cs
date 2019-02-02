@@ -19,7 +19,6 @@ namespace dictionary.Controllers
 
         private readonly IUnitOfWork<EntryDTO> _unitOfWork;
         private bool checkResult;
-        private JwtSecurityToken userdata;
         bool isUpdated;
 
         public EntryController(IUnitOfWork<EntryDTO> unitOfWork)
@@ -27,20 +26,11 @@ namespace dictionary.Controllers
             _unitOfWork = unitOfWork;
         }
        
+       
+ 
+
+
         
-        //TODO:CHANGE NECESSARY SQL QUERY TO GETALL().WHERE BLA BLA BLA
-        private bool Check()
-        {
-            var accesToken = Request.Headers["Authorization"];
-            if (accesToken.ToString() == null)
-            {
-                return false;
-            }
-            userdata = _unitOfWork._tokenHandler.ReadToken(accesToken) as JwtSecurityToken;
-            return true;
-        }
-
-
         
         /// <summary>
         /// Delete Entry
@@ -54,7 +44,7 @@ namespace dictionary.Controllers
             bool isDeleted;
             try
             {
-                if (!Check())
+                if (!_unitOfWork.Check(Request.Headers["Authorization"]))
                 {
                     return await Task.FromResult(new RequestStatus
                     {
@@ -146,7 +136,7 @@ namespace dictionary.Controllers
         {
             try
             {
-                if (!Check())
+                if (!_unitOfWork.Check(Request.Headers["Authorization"]))
                 {
                     return new RequestStatus
                     {
@@ -172,7 +162,7 @@ namespace dictionary.Controllers
                         }else if(checkVote.StatusInfoMessage == "Eksi")
                         {
                             //await _unitOfWork._entryRepository.AddToVoted(new Guid(userdata.Claims.First(x => x.Type == "nameid").Value), Id, true);
-                            var updated =await _unitOfWork._entryRepository.UpdateToVoted(new Guid(userdata.Claims.First(x => x.Type == "nameid").Value), Id, true);
+                            var updated =await _unitOfWork._entryRepository.UpdateToVoted(new Guid(_unitOfWork.userdata.Claims.First(x => x.Type == "nameid").Value), Id, true);
                             await _unitOfWork._entryRepository.VotePlus(Id,true);
                             checkResult = true;
 
@@ -180,7 +170,7 @@ namespace dictionary.Controllers
                         }
                         else if (checkVote.StatusInfoMessage == "Boş" )
                         {
-                            await _unitOfWork._entryRepository.AddToVoted(new Guid(userdata.Claims.First(x => x.Type == "nameid").Value), Id, true);
+                            await _unitOfWork._entryRepository.AddToVoted(new Guid(_unitOfWork.userdata.Claims.First(x => x.Type == "nameid").Value), Id, true);
 
                             await _unitOfWork._entryRepository.VotePlus(Id, false);
                             checkResult = true;
@@ -239,7 +229,7 @@ namespace dictionary.Controllers
         {
             try
             {
-                if (!Check())
+                if (!_unitOfWork.Check(Request.Headers["Authorization"]))
                 {
                     return new RequestStatus
                     {
@@ -256,7 +246,7 @@ namespace dictionary.Controllers
                         if (checkVote.StatusInfoMessage == "Artı")
                         {
                             //await _unitOfWork._entryRepository.AddToVoted(new Guid(userdata.Claims.First(x => x.Type == "nameid").Value), Id, false);
-                            var updated = await _unitOfWork._entryRepository.UpdateToVoted(new Guid(userdata.Claims.First(x => x.Type == "nameid").Value), Id, false);
+                            var updated = await _unitOfWork._entryRepository.UpdateToVoted(new Guid(_unitOfWork.userdata.Claims.First(x => x.Type == "nameid").Value), Id, false);
 
                             var result = await _unitOfWork._entryRepository.VoteMinus(Id, true);
                             checkResult = true;
@@ -273,7 +263,7 @@ namespace dictionary.Controllers
                         }
                         else if (checkVote.StatusInfoMessage == "Boş")
                         {
-                            await _unitOfWork._entryRepository.AddToVoted(new Guid(userdata.Claims.First(x => x.Type == "nameid").Value), Id, false);
+                            await _unitOfWork._entryRepository.AddToVoted(new Guid(_unitOfWork.userdata.Claims.First(x => x.Type == "nameid").Value), Id, false);
 
                             var result = await _unitOfWork._entryRepository.VoteMinus(Id, false);
                             checkResult = true;

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using dictionary.Helpers;
 using dictionary.Repository;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Primitives;
 
 namespace dictionary
 {
@@ -29,6 +30,8 @@ namespace dictionary
         public JwtSecurityTokenHandler _tokenHandler { get; set; }
 
         private bool disposedValue = false; // To detect redundant calls
+
+        public JwtSecurityToken userdata { get; set; }
 
 
         public UnitOfWork(IConfiguration configuration)
@@ -51,8 +54,17 @@ namespace dictionary
 
         }
 
+        public bool Check(StringValues token)
+        {
+            var accesToken = token;
+            if (accesToken.ToString() == null)
+            {
+                return false;
+            }
+            userdata = _tokenHandler.ReadToken(accesToken) as JwtSecurityToken;
+            return true;
+        }
 
-        
 
         public void Commit()
         {
@@ -78,6 +90,7 @@ namespace dictionary
             _authRepository = null;
             _titleRepository = null;
             _entryRepository = null;
+            _genericRepository = null;
 
         }
 
