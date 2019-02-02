@@ -8,8 +8,9 @@ using dictionary.Model;
 
 namespace dictionary.Repository
 {
-    public class EntryRepository : BaseRepository, IEntryRepository
+    public class EntryRepository : GenericRepository<EntryDTO>, IEntryRepository
     {
+
         public EntryRepository(IDbTransaction transaction) : base(transaction)
         {
 
@@ -18,14 +19,17 @@ namespace dictionary.Repository
         //TODO: AUTHORİZE 
         public async Task<RequestStatus> VoteMinus(Guid Id, bool isVoted)
         {
-            var data = await GetByIdAsync(Id);
-
-            if (data != null)
+            var sql = "select * from [Entry] where EntryId=@id";
+            var param = new { id = Id };
+            var model = await GetByIdAsync(sql, param);
+            if (model != null)
             {
                 if (isVoted == true)
-                    data.VotePlus -= 1;
-                data.VoteMinus += 1;
-                await UpdateAsync(data);
+                    model.VotePlus -= 1;
+                model.VoteMinus += 1;
+                sql = "update [Entry] set Entry=@e,UserId=@user,Time=@time,VoteMinus=@minus,VotePlus=@plus where EntryId=@ei";
+                var param2 = new { e = model.Entry, User = model.UserId, time = model.Time, minus = model.VoteMinus, plus = model.VotePlus, ei = model.EntryId };
+                await UpdateAsync(sql, param2);
                 return await Task.FromResult(new RequestStatus
                 {
                     Status = true,
@@ -41,14 +45,18 @@ namespace dictionary.Repository
 
         public async Task<RequestStatus> VotePlus(Guid Id, bool isVoted)
         {
-            var data = await GetByIdAsync(Id);
+            var sql = "select * from [Entry] where EntryId=@id";
+            var param = new { id = Id };
+            var model = await GetByIdAsync(sql, param);
 
-            if (data != null)
+            if (model != null)
             {
                 if (isVoted == true)
-                    data.VoteMinus -= 1;
-                data.VotePlus += 1;
-                await UpdateAsync(data);
+                    model.VoteMinus -= 1;
+                model.VotePlus += 1;
+                sql = "update [Entry] set Entry=@e,UserId=@user,Time=@time,VoteMinus=@minus,VotePlus=@plus where EntryId=@ei";
+                var param2 = new { e = model.Entry, User = model.UserId, time = model.Time, minus = model.VoteMinus, plus = model.VotePlus, ei = model.EntryId };
+                await UpdateAsync(sql, param2);
                 return await Task.FromResult(new RequestStatus
                 {
                     Status = true,
@@ -63,6 +71,12 @@ namespace dictionary.Repository
 
         }
 
+        public async void DeleteFromVoted(Guid Id)
+        {
+            var sql = "delete from [Voted] where EntryId=@ei";
+            var param = new { ei = Id };
+            var data = await DeleteAsync(sql,param);
+        }
         public async Task<IEnumerable<EntryDTO>> GetAllEntryForTitle(Guid Id)
         {
             var sql = "select b.*,a.Username from [Entry] b inner join [User] a on b.UserId=a.Id where TitleId=@id";
@@ -78,8 +92,9 @@ namespace dictionary.Repository
         public async Task<bool> AddToVoted(Guid UserId, Guid EntryId, bool vote)
         {
             var sql = "insert into [Voted] (UserId,EntryId,IsVotedPlus,IsVotedMinus) values(@ui,@ei,@ivp,@ivm)";
-            var result = await Connection.ExecuteAsync(sql, new { ui = UserId, ei = EntryId, ivp = vote == true ? true : false, ivm = vote == true ? false : true }, transaction: Transaction);
-            if (result != 0)
+            var param = new { ui = UserId, ei = EntryId, ivp = vote == true ? true : false, ivm = vote == true ? false : true };
+            var result = await InsertAsync(sql,param);
+            if (result != false)
             {
                 return await Task.FromResult(true);
             }
@@ -88,8 +103,9 @@ namespace dictionary.Repository
         public async Task<bool> UpdateToVoted(Guid UserId, Guid EntryId, bool vote)
         {
             var sql = "update [Voted] set  IsVotedPlus=@ivp,IsVotedMinus=@ivm where UserId=@ui and EntryId=@ei";
-            var result = await Connection.ExecuteAsync(sql, new { ivp = vote == true ? true : false, ivm = vote == true ? false : true,ui = UserId,ei = EntryId }, transaction: Transaction);
-            if (result != 0)
+            var param = new { ivp = vote == true ? true : false, ivm = vote == true ? false : true, ui = UserId, ei = EntryId };
+            var result = await UpdateAsync(sql, param);
+            if (result != false)
             {
                 return await Task.FromResult(true);
             }
@@ -127,94 +143,7 @@ namespace dictionary.Repository
             });
         }
 
-        #region CRUD
-        public async Task<bool> DeleteAsync(Guid id)
-        {
-            var sql = "delete from [Entry] where EntryId=@ei";
-
-            var data = await Connection.ExecuteAsync(sql, new { ei = id }, transaction: Transaction);
-            if (data != 0)
-            {
-                return await Task.FromResult(true);
-            }
-            return await Task.FromResult(false);
-
-        }
-
-        public Task<IEnumerable<EntryDTO>> GetAllAsync()
-        {
-            throw new NotImplementedException();
-        }
 
 
-
-        public async Task<EntryDTO> GetByIdAsync(Guid id)
-        {
-            var sql = "select * from [Entry] where EntryId=@Id";
-
-            var data = await Connection.QueryFirstOrDefaultAsync<EntryDTO>(sql, new { Id = id }, transaction: Transaction);
-
-            if (data != null)
-            {
-
-                return await Task.FromResult(data);
-            }
-            return null;
-        }
-
-        public Task<bool> InsertAsync(EntryDTO model)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<EntryDTO> UpdateAsync(EntryDTO model)
-        {
-            var sql = "update [Entry] set Entry=@e,UserId=@user,Time=@time,VoteMinus=@minus,VotePlus=@plus where EntryId=@ei";
-
-            var updatedModel = await Connection.ExecuteAsync(sql, new { e = model.Entry, User = model.UserId, time = model.Time, minus = model.VoteMinus, plus = model.VotePlus, ei = model.EntryId }, transaction: Transaction);
-
-            if (updatedModel != 0)
-            {
-                return await Task.FromResult(model);
-            }
-            return null;
-        }
-
-        public IEnumerable<EntryDTO> GetAll()
-        {
-            var sql = "select * from [Entry]";
-
-            var data = Connection.Query<EntryDTO>(sql, transaction: Transaction);
-
-            if (data != null)
-            {
-                return data;
-            }
-            return null;
-        }
-
-        public EntryDTO Update(EntryDTO model)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool Insert(EntryDTO model)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool Delete(Guid id)
-        {
-            throw new NotImplementedException();
-        }
-
-        public EntryDTO GetById(Guid id)
-        {
-            throw new NotImplementedException();
-        }
-
-
-
-        #endregion
     }
 }

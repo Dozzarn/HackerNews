@@ -10,13 +10,13 @@ using System.Threading.Tasks;
 
 namespace dictionary
 {
-    public interface IUnitOfWork : IDisposable
-    {
+    public interface IUnitOfWork<T> : IDisposable  where T:class
+    { 
         IAuthRepository _authRepository { get; set; }
         ITitleRepository _titleRepository { get; set; }
         JwtSecurityTokenHandler _tokenHandler { get; set; }
         IEntryRepository _entryRepository { get; set; }
-
+        IGenericRepository<T> _genericRepository { get; set; }
         RedisHandler _redisHandler { get; set; }
 
  

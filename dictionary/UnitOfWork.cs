@@ -12,7 +12,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace dictionary
 {
-    public class UnitOfWork : IUnitOfWork
+    public class UnitOfWork<T> : IUnitOfWork<T> where T : class
     {
         //TODO:Logger
 
@@ -23,6 +23,7 @@ namespace dictionary
         public ITitleRepository _titleRepository { get; set; }
         public RedisHandler _redisHandler { get; set; }
         public IEntryRepository _entryRepository { get; set; }
+        public IGenericRepository<T> _genericRepository { get; set; }
 
         public IConfiguration _configuration { get; set; }
         public JwtSecurityTokenHandler _tokenHandler { get; set; }
@@ -42,7 +43,7 @@ namespace dictionary
 
 
 
-
+            _genericRepository = new GenericRepository<T>(_transaction);
             _tokenHandler = new JwtSecurityTokenHandler();
             _authRepository = new AuthRepository(_transaction);
             _titleRepository = new TitleRepository(_transaction);
@@ -51,7 +52,7 @@ namespace dictionary
         }
 
 
-
+        
 
         public void Commit()
         {
@@ -71,6 +72,7 @@ namespace dictionary
                 resetRepositories();
             }
         }
+
         private void resetRepositories()
         {
             _authRepository = null;

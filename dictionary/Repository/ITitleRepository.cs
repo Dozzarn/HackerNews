@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace dictionary.Repository
 {
-    public interface ITitleRepository : ICrud<TitleDTO>
+    public interface ITitleRepository
     {
         Task<TitleDTO> IsBinded(Guid Id);
         

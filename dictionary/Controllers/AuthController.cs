@@ -20,8 +20,8 @@ namespace dictionary.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly IUnitOfWork _unitOfWork;
-        public AuthController(IUnitOfWork unitOfWork)
+        private readonly IUnitOfWork<UserDTO> _unitOfWork;
+        public AuthController(IUnitOfWork<UserDTO> unitOfWork)
         {
             _unitOfWork = unitOfWork;
         }
@@ -71,7 +71,6 @@ namespace dictionary.Controllers
             if (createdUser != null)
             {
                 _unitOfWork.Commit();
-                _unitOfWork.Dispose();
                 result = new UserForRegisterResultDTO
                 {
                     Username = createdUser.Username,

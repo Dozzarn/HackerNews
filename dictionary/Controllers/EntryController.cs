@@ -4,6 +4,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Threading.Tasks;
 using dictionary.Model;
+using dictionary.Repository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,19 +17,40 @@ namespace dictionary.Controllers
     public class EntryController : ControllerBase
     {
 
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IUnitOfWork<EntryDTO> _unitOfWork;
         private bool checkResult;
         private JwtSecurityToken userdata;
-        public EntryController(IUnitOfWork unitOfWork)
+        bool isUpdated;
+
+        public EntryController(IUnitOfWork<EntryDTO> unitOfWork)
         {
             _unitOfWork = unitOfWork;
         }
        
+        
+        //TODO:CHANGE NECESSARY SQL QUERY TO GETALL().WHERE BLA BLA BLA
+        private bool Check()
+        {
+            var accesToken = Request.Headers["Authorization"];
+            if (accesToken.ToString() == null)
+            {
+                return false;
+            }
+            userdata = _unitOfWork._tokenHandler.ReadToken(accesToken) as JwtSecurityToken;
+            return true;
+        }
+
+
+        
+        /// <summary>
+        /// Delete Entry
+        /// </summary>
+        /// <param name="Id"></param>
+        /// <returns></returns>
         [HttpPost("delete")]
         public async Task<RequestStatus> DeleteEntry([FromBody] Guid Id)
         {
 
-            TitleDTO isUpdated = new TitleDTO();
             bool isDeleted;
             try
             {
@@ -45,14 +67,19 @@ namespace dictionary.Controllers
                     var isBinded = await _unitOfWork._titleRepository.IsBinded(Id);
                     if (isBinded != null)
                     {
-                        var list = await _unitOfWork._entryRepository.GetAllAsync();
+                        var sql = "select * from [Entry]";
+                        var list = await _unitOfWork._genericRepository.GetAllAsync(sql);
                         var data = list.OrderBy(x => x.Time).Where(x => x.TitleId == isBinded.TitleId).ToList();
                         if (data != null)
                         {
                             var second = data.ElementAt(1);
                             isBinded.EntryId = second.EntryId;
-                             isUpdated= await _unitOfWork._titleRepository.UpdateAsync(isBinded);
-                             isDeleted = await _unitOfWork._entryRepository.DeleteAsync(Id);
+                            sql = "update [Title] set EntryId=@ei";
+                            var param = new { ei = Id };
+                            isUpdated = await _unitOfWork._genericRepository.UpdateAsync(sql,param);
+                            _unitOfWork._entryRepository.DeleteFromVoted(Id);
+                            sql = "delete from [Entry] where EntryId=@ei";
+                            isDeleted = await _unitOfWork._genericRepository.DeleteAsync(sql,param);
                         }
                         else
                         {
@@ -65,9 +92,12 @@ namespace dictionary.Controllers
                     }
                     else
                     {
-                        isDeleted = await _unitOfWork._entryRepository.DeleteAsync(Id);
+                        var sql = "delete from [Entry] where EntryId=@ei";
+                        var param = new { ei = Id };
+                        _unitOfWork._entryRepository.DeleteFromVoted(Id);
+                        isDeleted = await _unitOfWork._genericRepository.DeleteAsync(sql,param);
                     }
-                    if (isDeleted == true || isUpdated.TitleId != Guid.Empty)
+                    if (isDeleted == true || isUpdated != false)
                     {
                         _unitOfWork.Commit();
                         return await Task.FromResult(new RequestStatus
@@ -84,7 +114,7 @@ namespace dictionary.Controllers
                             StatusInfoMessage = "Kayıt Bulunamadı"
                         });
                     }
-                    
+
                 }
                 else
                 {
@@ -104,17 +134,6 @@ namespace dictionary.Controllers
                 });
                 throw;
             }
-        }
-        //TODO:CHANGE NECESSARY SQL QUERY TO GETALL().WHERE BLA BLA BLA
-        private bool Check()
-        {
-            var accesToken = Request.Headers["Authorization"];
-            if (accesToken.ToString() == null)
-            {
-                return false;
-            }
-            userdata = _unitOfWork._tokenHandler.ReadToken(accesToken) as JwtSecurityToken;
-            return true;
         }
 
         /// <summary>

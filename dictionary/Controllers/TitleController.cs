@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using dictionary.Model;
+using dictionary.Repository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -13,9 +14,9 @@ namespace dictionary.Controllers
     [ApiController]
     public class TitleController : ControllerBase
     {
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IUnitOfWork<TitleDTO> _unitOfWork;
         private string allTitleData = "AllTitle:Data";
-        public TitleController(IUnitOfWork unitOfWork)
+        public TitleController(IUnitOfWork<TitleDTO> unitOfWork)
         {
             _unitOfWork = unitOfWork;
         }
@@ -31,7 +32,8 @@ namespace dictionary.Controllers
             var isCached = await _unitOfWork._redisHandler.IsCached(allTitleData);
             if (isCached == false)
             {
-                var data = await _unitOfWork._titleRepository.GetAllAsync();
+                var sql = "select a.*,b.Entry from [Title] a inner join [Entry] b on a.EntryId=b.EntryId";
+                var data = await _unitOfWork._genericRepository.GetAllAsync(sql);
                 if (data != null)
                 {
                     await _unitOfWork._redisHandler.AddToCache(allTitleData, TimeSpan.FromMinutes(10), JsonConvert.SerializeObject(data));
@@ -81,7 +83,9 @@ namespace dictionary.Controllers
             var isCached = await _unitOfWork._redisHandler.IsCached(key);
             if (isCached == false)
             {
-                var title = await _unitOfWork._titleRepository.GetByIdAsync(guid);
+                var sql = "select * from [Title] where TitleId=@id";
+                var param = new { id = guid };
+                var title = await _unitOfWork._genericRepository.GetByIdAsync(sql, param);
                 var entries = await _unitOfWork._entryRepository.GetAllEntryForTitle(guid);
 
                 if (title != null)

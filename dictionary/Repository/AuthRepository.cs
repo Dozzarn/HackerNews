@@ -8,7 +8,7 @@ using dictionary.Model;
 
 namespace dictionary.Repository
 {
-    public class AuthRepository : BaseRepository, IAuthRepository
+    public class AuthRepository : GenericRepository<UserDTO>, IAuthRepository
     {
 
         public AuthRepository(IDbTransaction transaction) : base(transaction)
@@ -19,7 +19,8 @@ namespace dictionary.Repository
         {
 
             var sql = $"select * from [User] where Username=@Search";
-            var data = await Connection.QueryFirstOrDefaultAsync<UserDTO>(sql, new { Search = user.Username }, transaction: Transaction);
+            //var data = await Connection.QueryFirstOrDefaultAsync<UserDTO>(sql, new { Search = user.Username }, transaction: Transaction);
+            var data = await GetByIdAsync(sql, new { Search = user.Username });
             if (data != null)
             {
                 return await Task.FromResult(data);
@@ -54,7 +55,10 @@ namespace dictionary.Repository
             user.PasswordHash = passwordHash;
             user.PasswordSalt = passwordSalt;
 
-            if (await InsertAsync(user))
+            var sql = "insert into [User] (Username,PasswordHash,PasswordSalt) values (@name,@hash,@salt)";
+            var param = new { name = user.Username, hash = user.PasswordHash, salt = user.PasswordSalt };
+
+            if (await InsertAsync(sql,param))
             {
                 return await Task.FromResult(user);
             }
@@ -128,102 +132,6 @@ namespace dictionary.Repository
         }
 
 
-        #region CRUD
-        public async Task<UserDTO> UpdateAsync(UserDTO model)
-        {
-            var sql = "update [User] set Username=@name,PasswordHash=@hash,PasswordSalt=@salt where Id=@id";
 
-            var data = await Connection.ExecuteAsync(sql, new { name = model.Username, hash = model.PasswordHash, salt = model.PasswordSalt,Id = model.Id }, transaction: Transaction);
-            if (data != 0)
-            {
-
-                return await Task.FromResult(model);
-            }
-
-            return null;
-        }
-
-        public async Task<bool> InsertAsync(UserDTO model)
-        {
-            var sql = "insert into [User] (Username,PasswordHash,PasswordSalt) values (@name,@hash,@salt)";
-
-            var data = await Connection.ExecuteAsync(sql, new { name = model.Username, hash = model.PasswordHash, salt = model.PasswordSalt }, transaction: Transaction);
-            if (data != 0)
-            {
-                
-                return await Task.FromResult(true);
-            }
-
-            return await Task.FromResult(false);
-        }
-
-        public async Task<bool> DeleteAsync(Guid id)
-        {
-            var sql = "delete from [User] where Id=@Id";
-            var data = await Connection.ExecuteAsync(sql, new { Id = id },transaction:Transaction);
-            if (data != 0)
-            {
-                return await Task.FromResult(true);
-            }
-            return await Task.FromResult(false);
-
-        }
-
-        public async Task<IEnumerable<UserDTO>> GetAllAsync()
-        {
-            var sql = "select * from [User]";
-
-            var data = await Connection.QueryAsync<UserDTO>(sql, transaction: Transaction);
-            if (data != null)
-            {
-
-                return await Task.FromResult(data);
-            }
-
-            return await Task.FromResult(data);
-        }
-
-        public async Task<UserDTO> GetByIdAsync(Guid id)
-        {
-            var sql = "select * from [User] where Id=@Id";
-
-            var data = await Connection.QueryFirstOrDefaultAsync<UserDTO>(sql,new { Id=id }, transaction: Transaction);
-            if (data != null)
-            {
-                return await Task.FromResult(data);
-            }
-
-            return null;
-        }
-
-        public IEnumerable<UserDTO> GetAll()
-        {
-            throw new NotImplementedException();
-        }
-
-        public UserDTO Update(UserDTO model)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool Insert(UserDTO model)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool Delete(Guid id)
-        {
-            throw new NotImplementedException();
-        }
-
-        public UserDTO GetById(Guid id)
-        {
-            throw new NotImplementedException();
-        }
-
-
-
-
-        #endregion
     }
 }

@@ -69,7 +69,7 @@ namespace dictionary
             });
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
-            services.AddScoped<IUnitOfWork,UnitOfWork>();
+            services.AddScoped(typeof(IUnitOfWork<>),typeof(UnitOfWork<>));
 
             
 
