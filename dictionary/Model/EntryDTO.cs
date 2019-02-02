@@ -11,7 +11,6 @@ namespace dictionary.Model
         [JsonProperty("ei")]
         public Guid EntryId { get; set; }
         [JsonProperty("e")]
-
         public string Entry { get; set; }
         [JsonProperty("d")]
 

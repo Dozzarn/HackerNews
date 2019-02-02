@@ -25,13 +25,111 @@ namespace dictionary.Controllers
         {
             _unitOfWork = unitOfWork;
         }
-       
-       
- 
 
 
-        
-        
+        [HttpPatch("update")]
+        public async Task<EntryForUpdateResultDTO> UpdateEntry([FromBody]EntryForUpdateDTO model)
+        {
+            try
+            {
+                if (!_unitOfWork.Check(Request.Headers["Authorization"]))
+                {
+                    return await Task.FromResult(new EntryForUpdateResultDTO
+                    {
+                        Status = false,
+                        StatusInfoMessage = "Kullanıcı Girişi Yapınız"
+                    });
+                }
+                if (!string.IsNullOrEmpty(model.Entry) &&  !string.IsNullOrEmpty(model.EntryId.ToString()))
+                {
+                    var sql = "update [Entry] set Entry =@e where EntryId=@ei";
+                    var param = new { e = model.Entry, ei = model.EntryId };
+                    var result = await _unitOfWork._genericRepository.UpdateAsync(sql, param);
+                    if (result != false)
+                    {
+                        _unitOfWork.Commit();
+                        return await Task.FromResult(new EntryForUpdateResultDTO
+                        {
+                            Status = true,
+                            StatusInfoMessage = "Güncelleme Başarıyla Yapıldı"
+                        });
+                    }
+                    return await Task.FromResult(new EntryForUpdateResultDTO
+                    {
+                        Status = false,
+                        StatusInfoMessage = "Güncelleme İşlemi Yapılamadı"
+                    });
+                }
+                return await Task.FromResult(new EntryForUpdateResultDTO
+                {
+                    Status = false,
+                    StatusInfoMessage = "Eksikleri Doldurunuz"
+                });
+
+            }
+            catch (Exception)
+            {
+
+                return await Task.FromResult(new EntryForUpdateResultDTO
+                {
+                    Status = false,
+                    StatusInfoMessage = "Bir Sorunla Karşılaşıldı"
+                });
+            }
+        }
+
+        [HttpPost("insert")]
+        public async Task<RequestStatus> InsertEntry([FromBody] EntryForInsertDTO model)
+        {
+            try
+            {
+                if (!_unitOfWork.Check(Request.Headers["Authorization"]))
+                {
+                    return await Task.FromResult(new RequestStatus
+                    {
+                        Status = false,
+                        StatusInfoMessage = "Kullanıcı Girişi Yapınız"
+                    });
+                }
+                if (model.Entry != null && model.TitleId != null)
+                {
+                    var sql = "insert into [Entry] (Entry,TitleId,UserId) values (@e,@ti,@ui)";
+                    var uid = new Guid(_unitOfWork.userdata.Claims.First(x => x.Type == "nameid").Value);
+                    var param = new { e = model.Entry, ti = model.TitleId, ui = uid };
+                    var result = await _unitOfWork._genericRepository.InsertAsync(sql, param);
+                    if (result != false)
+                    {
+                        _unitOfWork.Commit();
+                        return await Task.FromResult(new RequestStatus
+                        {
+                            Status = true,
+                            StatusInfoMessage = "İşlem Başarılı"
+                        });
+                    }
+                    return await Task.FromResult(new RequestStatus
+                    {
+                        Status = false,
+                        StatusInfoMessage = "İşlem Başarısız"
+                    });
+                }
+                return await Task.FromResult(new RequestStatus
+                {
+                    Status = false,
+                    StatusInfoMessage = "Eksikleri Doldurunuz"
+                });
+            }
+            catch (Exception)
+            {
+
+                return await Task.FromResult(new RequestStatus
+                {
+                    Status =false,
+                    StatusInfoMessage = "Bir Sorunla Karşılaşıldı"
+                });
+            }
+
+        }
+
         /// <summary>
         /// Delete Entry
         /// </summary>
