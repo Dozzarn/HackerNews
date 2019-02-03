@@ -26,6 +26,30 @@ namespace dictionary.Controllers
             _unitOfWork = unitOfWork;
         }
 
+        [HttpGet("getall")]
+        public async Task<EntryForGelAllDTO> GetAll()
+        {
+            try
+            {
+                var sql = "select * from [Entry] a inner join [User] b on a.UserId=b.Id ";
+                var result = await _unitOfWork._genericRepository.GetAllAsync(sql);
+                return await Task.FromResult(new EntryForGelAllDTO
+                {
+                    AllEntry = result,
+                    Status = true,
+                    StatusInfoMessage = "Başarıyla Getirildi"
+                });
+            }
+            catch (Exception)
+            {
+                return await Task.FromResult(new EntryForGelAllDTO
+                {
+                    Status = false,
+                    StatusInfoMessage = "Bir Sorunla Karşılaşıldı"
+                });
+                throw;
+            }
+        }
 
         [HttpPatch("update")]
         public async Task<EntryForUpdateResultDTO> UpdateEntry([FromBody]EntryForUpdateDTO model)
