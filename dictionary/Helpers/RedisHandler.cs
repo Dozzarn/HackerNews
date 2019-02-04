@@ -7,7 +7,6 @@ namespace dictionary.Helpers
 {
     public class RedisHandler
     {
-        //TODO: Redisi  Konulara ekle
         private readonly ConnectionMultiplexer Connection;
         private readonly IDatabaseAsync db;
         public RedisHandler()

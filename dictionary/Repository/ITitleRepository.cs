@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace dictionary.Repository
 {
-    public interface ITitleRepository : ICrud<TitleDTO>
+    public interface ITitleRepository
     {
-        Task<RequestStatus> VotePlus(Guid Id);
-        Task<RequestStatus> VoteMinus(Guid Id);
+        Task<TitleDTO> IsBinded(Guid Id);
+        
     }
 }

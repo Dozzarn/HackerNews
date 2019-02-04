@@ -11,14 +11,14 @@ namespace dictionary.Model
         [JsonProperty("ei")]
         public Guid EntryId { get; set; }
         [JsonProperty("e")]
-
         public string Entry { get; set; }
         [JsonProperty("d")]
 
         public DateTime Time { get; set; }
 
+        [JsonProperty("ui")]
+        public Guid UserId { get; set; }
         [JsonProperty("u")]
-
         public string Username { get; set; }
 
         [JsonProperty("ti")]

@@ -8,7 +8,7 @@ using dictionary.Model;
 
 namespace dictionary.Repository
 {
-    public class AuthRepository : BaseRepository, IAuthRepository
+    public class AuthRepository : GenericRepository<UserDTO>, IAuthRepository
     {
 
         public AuthRepository(IDbTransaction transaction) : base(transaction)
@@ -19,7 +19,8 @@ namespace dictionary.Repository
         {
 
             var sql = $"select * from [User] where Username=@Search";
-            var data = await Connection.QueryFirstOrDefaultAsync<UserDTO>(sql, new { Search = user.Username }, transaction: Transaction);
+            //var data = await Connection.QueryFirstOrDefaultAsync<UserDTO>(sql, new { Search = user.Username }, transaction: Transaction);
+            var data = await GetByIdAsync(sql, new { Search = user.Username });
             if (data != null)
             {
                 return await Task.FromResult(data);
@@ -54,7 +55,10 @@ namespace dictionary.Repository
             user.PasswordHash = passwordHash;
             user.PasswordSalt = passwordSalt;
 
-            if (await Insert(user))
+            var sql = "insert into [User] (Username,PasswordHash,PasswordSalt) values (@name,@hash,@salt)";
+            var param = new { name = user.Username, hash = user.PasswordHash, salt = user.PasswordSalt };
+
+            if (await InsertAsync(sql,param))
             {
                 return await Task.FromResult(user);
             }
@@ -105,70 +109,29 @@ namespace dictionary.Repository
             return true;
         }
 
-        
-
-        #region CRUD
-        public async Task<UserDTO> Update(UserDTO model)
+        public async Task<TotalActivityDTO> GetTotals(Guid UserId)
         {
-            var sql = "update [User] set Username=@name,PasswordHash=@hash,PasswordSalt=@salt where Id=@id";
-
-            var data = await Connection.ExecuteAsync(sql, new { name = model.Username, hash = model.PasswordHash, salt = model.PasswordSalt,Id = model.Id }, transaction: Transaction);
-            if (data != 0)
+            var sql1 = "select * from [Entry] a inner join [User] b on a.UserId=b.Id where UserId=@id";//total entry
+            var sql2 = "select * from [Title] a inner join [User] b on a.UserId=b.Id inner join [Entry] c on a.EntryId=c.EntryId where a.UserId=@id";//total title
+            var sql3 = "select count(*) from [Voted] where UserId=@id and IsVotedMinus=@ivm";//total minus
+            var sql4 = "select count(*) from [Voted] where UserId=@id and IsVotedPlus=@ivp";//total plus
+            var e = await Connection.QueryAsync<EntryDTO>(sql1, new { id = UserId }, transaction: Transaction);
+            var t = await Connection.QueryAsync<TitleDTO>(sql2, new { id = UserId }, transaction: Transaction);
+            var tm = await Connection.QueryAsync<int>(sql3, new { id = UserId,ivm=true}, transaction: Transaction);
+            var tp = await Connection.QueryAsync<int>(sql4, new { id = UserId,ivp=true }, transaction: Transaction);
+            return await Task.FromResult(new TotalActivityDTO
             {
+                EntryList = e,
+                TotalMinus = tm,
+                TotalPlus = tp,
+                TitleList = t,
+                Status=true,
+                StatusInfoMessage="Başarılı"
+            });
 
-                return await Task.FromResult(model);
-            }
-
-            return null;
-        }
-
-        public async Task<bool> Insert(UserDTO model)
-        {
-            var sql = "insert into [User] (Username,PasswordHash,PasswordSalt) values (@name,@hash,@salt)";
-
-            var data = await Connection.ExecuteAsync(sql, new { name = model.Username, hash = model.PasswordHash, salt = model.PasswordSalt }, transaction: Transaction);
-            if (data != 0)
-            {
-                
-                return await Task.FromResult(true);
-            }
-
-            return await Task.FromResult(false);
-        }
-
-        public Task<bool> Delete(Guid id)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<IEnumerable<UserDTO>> GetAll()
-        {
-            var sql = "select * from [User]";
-
-            var data = await Connection.QueryAsync<UserDTO>(sql, transaction: Transaction);
-            if (data != null)
-            {
-
-                return await Task.FromResult(data);
-            }
-
-            return await Task.FromResult(data);
-        }
-
-        public async Task<UserDTO> GetById(Guid id)
-        {
-            var sql = "select * from [User] where Id=@Id";
-
-            var data = await Connection.QueryFirstOrDefaultAsync<UserDTO>(sql,new { Id=id }, transaction: Transaction);
-            if (data != null)
-            {
-                return await Task.FromResult(data);
-            }
-
-            return null;
         }
 
 
-        #endregion
+
     }
 }

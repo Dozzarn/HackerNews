@@ -2,15 +2,18 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using dictionary.Helpers;
 using dictionary.Repository;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Primitives;
 
 namespace dictionary
 {
-    public class UnitOfWork : IUnitOfWork
+    public class UnitOfWork<T> : IUnitOfWork<T> where T : class
     {
         //TODO:Logger
 
@@ -21,9 +24,14 @@ namespace dictionary
         public ITitleRepository _titleRepository { get; set; }
         public RedisHandler _redisHandler { get; set; }
         public IEntryRepository _entryRepository { get; set; }
+        public IGenericRepository<T> _genericRepository { get; set; }
 
         public IConfiguration _configuration { get; set; }
+        public JwtSecurityTokenHandler _tokenHandler { get; set; }
+
         private bool disposedValue = false; // To detect redundant calls
+
+        public JwtSecurityToken userdata { get; set; }
 
 
         public UnitOfWork(IConfiguration configuration)
@@ -38,16 +46,24 @@ namespace dictionary
 
 
 
-
-
-
+            _genericRepository = new GenericRepository<T>(_transaction);
+            _tokenHandler = new JwtSecurityTokenHandler();
             _authRepository = new AuthRepository(_transaction);
             _titleRepository = new TitleRepository(_transaction);
             _entryRepository = new EntryRepository(_transaction);
 
         }
 
-
+        public bool Check(StringValues token)
+        {
+            var accesToken = token;
+            if (accesToken.ToString() == null)
+            {
+                return false;
+            }
+            userdata = _tokenHandler.ReadToken(accesToken) as JwtSecurityToken;
+            return true;
+        }
 
 
         public void Commit()
@@ -68,10 +84,13 @@ namespace dictionary
                 resetRepositories();
             }
         }
+
         private void resetRepositories()
         {
             _authRepository = null;
             _titleRepository = null;
+            _entryRepository = null;
+            _genericRepository = null;
 
         }
 
@@ -116,7 +135,7 @@ namespace dictionary
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             Dispose(true);
             // TODO: uncomment the following line if the finalizer is overridden above.
-            GC.SuppressFinalize(this);
+            //GC.SuppressFinalize(this);
         }
         #endregion
 
