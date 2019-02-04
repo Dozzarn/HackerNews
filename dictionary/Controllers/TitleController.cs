@@ -106,42 +106,54 @@ namespace dictionary.Controllers
         public async Task<TitleForGetAllDTO> GetAll()
         {
 
-            var isCached = await _unitOfWork._redisHandler.IsCached(allTitleData);
-            if (isCached == false)
+            try
             {
-                var sql = "select a.*,b.Entry from [Title] a inner join [Entry] b on a.EntryId=b.EntryId";
-                var data = await _unitOfWork._genericRepository.GetAllAsync(sql);
-                if (data != null)
+                var isCached = await _unitOfWork._redisHandler.IsCached(allTitleData);
+                if (isCached == false)
                 {
-                    await _unitOfWork._redisHandler.AddToCache(allTitleData, TimeSpan.FromMinutes(10), JsonConvert.SerializeObject(data));
+                    var sql = "select a.*,b.Entry from [Title] a inner join [Entry] b on a.EntryId=b.EntryId";
+                    var data = await _unitOfWork._genericRepository.GetAllAsync(sql);
+                    if (data != null)
+                    {
+                        await _unitOfWork._redisHandler.AddToCache(allTitleData, TimeSpan.FromMinutes(1), JsonConvert.SerializeObject(data));
+                        return await Task.FromResult(new TitleForGetAllDTO
+                        {
+                            Titles = data,
+                            Status = true,
+                            StatusInfoMessage = "Başarılı"
+                        });
+                    }
+                    else
+                    {
+                        return await Task.FromResult(new TitleForGetAllDTO
+                        {
+                            Status = false,
+                            StatusInfoMessage = "başarısız"
+                        });
+                    }
+
+                }
+                else
+                {
+                    var data = JsonConvert.DeserializeObject<IEnumerable<TitleDTO>>(await _unitOfWork._redisHandler.GetFromCache(allTitleData));
                     return await Task.FromResult(new TitleForGetAllDTO
                     {
                         Titles = data,
                         Status = true,
                         StatusInfoMessage = "Başarılı"
                     });
-                }
-                else
-                {
-                    return await Task.FromResult(new TitleForGetAllDTO
-                    {
-                        Titles = null,
-                        Status = false,
-                        StatusInfoMessage = "başarısız"
-                    });
-                }
 
+                }
             }
-            else
+            catch (Exception)
             {
-                var data = JsonConvert.DeserializeObject<IEnumerable<TitleDTO>>(await _unitOfWork._redisHandler.GetFromCache(allTitleData));
                 return await Task.FromResult(new TitleForGetAllDTO
                 {
-                    Titles = data,
-                    Status = true,
-                    StatusInfoMessage = "Başarılı"
+                    Status = false,
+                    StatusInfoMessage = "Bir Sorunla Karşılaşıldı"
                 });
 
+                throw;
             }
 
 

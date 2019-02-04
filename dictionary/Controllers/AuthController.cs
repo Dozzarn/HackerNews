@@ -106,21 +106,52 @@ namespace dictionary.Controllers
             return await Task.FromResult(Ok(TokenHandler(user, userForLoginDTO.RememberMe)));
         }
 
-
+        /// <summary>
+        /// Get User Activity Info
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("useractivity")]
         public async Task<TotalActivityDTO> UserActivity()
         {
-            var accesToken = Request.Headers["Authorization"];
-            if (accesToken.ToString() == null)
+            try
+            {
+                if (!_unitOfWork.Check(Request.Headers["Authorization"]))
+                {
+                    var userId = new Guid(_unitOfWork.userdata.Claims.First(x => x.Type == "nameid").Value);
+                    var key = $"User:Activity:{userId}";
+                    var isCached = await _unitOfWork._redisHandler.IsCached(key);
+                    if (isCached == false)
+                    {
+                        var data = await _unitOfWork._authRepository.GetTotals(userId);
+                        await _unitOfWork._redisHandler.AddToCache(key, TimeSpan.FromMinutes(1), JsonConvert.SerializeObject(data));
+                        return await Task.FromResult(data);
+
+                    }
+                    else
+                    {
+                        var data = JsonConvert.DeserializeObject<TotalActivityDTO>(await _unitOfWork._redisHandler.GetFromCache(key));
+                        return await Task.FromResult(data);
+                    }
+                }
+                else
+                {
+                    return await Task.FromResult(new TotalActivityDTO
+                    {
+                        Status = false,
+                        StatusInfoMessage = "Kullanıcı Girişi Yapınız"
+                    });
+                }
+
+            }
+            catch (Exception)
             {
                 return await Task.FromResult(new TotalActivityDTO
                 {
                     Status = false,
-                    StatusInfoMessage = "Kullanıcı Girişi Yapınız"
-                }); 
+                    StatusInfoMessage = "Bir Sorunla Karşılaşıldı"
+                });
+                throw;
             }
-            var userdata = _unitOfWork._tokenHandler.ReadToken(accesToken) as JwtSecurityToken;
-            return await Task.FromResult(await _unitOfWork._authRepository.GetTotals(new Guid(userdata.Claims.First(x => x.Type == "nameid").Value)));
         }
 
         private UserForLoginResultDTO TokenHandler(UserDTO user, bool rememberMe)

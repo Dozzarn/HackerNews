@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
+using Newtonsoft.Json;
 
 namespace dictionary.Controllers
 {
@@ -20,25 +21,56 @@ namespace dictionary.Controllers
         private readonly IUnitOfWork<EntryDTO> _unitOfWork;
         private bool checkResult;
         bool isUpdated;
-
+        private string allTitleData = "AllEntry:Data";
         public EntryController(IUnitOfWork<EntryDTO> unitOfWork)
         {
             _unitOfWork = unitOfWork;
         }
 
+
+        /// <summary>
+        /// Get All Entry
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("getall")]
         public async Task<EntryForGelAllDTO> GetAll()
         {
             try
             {
-                var sql = "select * from [Entry] a inner join [User] b on a.UserId=b.Id ";
-                var result = await _unitOfWork._genericRepository.GetAllAsync(sql);
-                return await Task.FromResult(new EntryForGelAllDTO
+                var isCached = await _unitOfWork._redisHandler.IsCached(allTitleData);
+                if (isCached == false)
                 {
-                    AllEntry = result,
-                    Status = true,
-                    StatusInfoMessage = "Başarıyla Getirildi"
-                });
+                    var sql = "select * from [Entry] a inner join [User] b on a.UserId=b.Id ";
+                    var result = await _unitOfWork._genericRepository.GetAllAsync(sql);
+                    if (result != null)
+                    {
+                        await _unitOfWork._redisHandler.AddToCache(allTitleData, TimeSpan.FromMinutes(1), JsonConvert.SerializeObject(result));
+                        return await Task.FromResult(new EntryForGelAllDTO
+                        {
+                            AllEntry = result,
+                            Status = true,
+                            StatusInfoMessage = "Başarıyla Getirildi"
+                        });
+                    }
+                    else
+                    {
+                        return await Task.FromResult(new EntryForGelAllDTO
+                        {
+                            Status = false,
+                            StatusInfoMessage = "Data Bulunamadı"
+                        });
+                    }
+                }
+                else
+                {
+                    var data = JsonConvert.DeserializeObject<IEnumerable<EntryDTO>>(await _unitOfWork._redisHandler.GetFromCache(allTitleData));
+                    return await Task.FromResult(new EntryForGelAllDTO
+                    {
+                        AllEntry = data,
+                        Status = true,
+                        StatusInfoMessage = "Başarılı"
+                    });
+                }
             }
             catch (Exception)
             {
@@ -51,6 +83,11 @@ namespace dictionary.Controllers
             }
         }
 
+        /// <summary>
+        /// Update Entry
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
         [HttpPatch("update")]
         public async Task<EntryForUpdateResultDTO> UpdateEntry([FromBody]EntryForUpdateDTO model)
         {
@@ -102,6 +139,12 @@ namespace dictionary.Controllers
             }
         }
 
+
+        /// <summary>
+        /// Insert Entry
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
         [HttpPost("insert")]
         public async Task<RequestStatus> InsertEntry([FromBody] EntryForInsertDTO model)
         {
