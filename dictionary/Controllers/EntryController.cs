@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using dictionary.Model;
 using dictionary.Repository;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -14,7 +15,7 @@ using Newtonsoft.Json;
 namespace dictionary.Controllers
 {
     [Route("api/[controller]")]
-    [ApiController]
+    [ApiController,Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class EntryController : ControllerBase
     {
 
@@ -32,7 +33,7 @@ namespace dictionary.Controllers
         /// Get All Entry
         /// </summary>
         /// <returns></returns>
-        [HttpGet("getall")]
+        [HttpGet("getall"),AllowAnonymous]
         public async Task<EntryForGelAllDTO> GetAll()
         {
             try
@@ -93,14 +94,7 @@ namespace dictionary.Controllers
         {
             try
             {
-                if (!_unitOfWork.Check(Request.Headers["Authorization"]))
-                {
-                    return await Task.FromResult(new EntryForUpdateResultDTO
-                    {
-                        Status = false,
-                        StatusInfoMessage = "Kullanıcı Girişi Yapınız"
-                    });
-                }
+               
                 if (!string.IsNullOrEmpty(model.Entry) &&  !string.IsNullOrEmpty(model.EntryId.ToString()))
                 {
                     var sql = "update [Entry] set Entry =@e where EntryId=@ei";
@@ -150,18 +144,12 @@ namespace dictionary.Controllers
         {
             try
             {
-                if (!_unitOfWork.Check(Request.Headers["Authorization"]))
-                {
-                    return await Task.FromResult(new RequestStatus
-                    {
-                        Status = false,
-                        StatusInfoMessage = "Kullanıcı Girişi Yapınız"
-                    });
-                }
+                var userdata = _unitOfWork.getToken(Request.Headers["Authorization"]);
+
                 if (model.Entry != null && model.TitleId != null)
                 {
                     var sql = "insert into [Entry] (Entry,TitleId,UserId) values (@e,@ti,@ui)";
-                    var uid = new Guid(_unitOfWork.userdata.Claims.First(x => x.Type == "nameid").Value);
+                    var uid = new Guid(userdata.Claims.First(x => x.Type == "nameid").Value);
                     var param = new { e = model.Entry, ti = model.TitleId, ui = uid };
                     var result = await _unitOfWork._genericRepository.InsertAsync(sql, param);
                     if (result != false)
@@ -209,14 +197,7 @@ namespace dictionary.Controllers
             bool isDeleted;
             try
             {
-                if (!_unitOfWork.Check(Request.Headers["Authorization"]))
-                {
-                    return await Task.FromResult(new RequestStatus
-                    {
-                        Status = false,
-                        StatusInfoMessage = "Kullanıcı Girişi Yapınız"
-                    });
-                }
+               
                 if (Id != null)
                 {
                     var isBinded = await _unitOfWork._titleRepository.IsBinded(Id);
@@ -301,18 +282,12 @@ namespace dictionary.Controllers
         {
             try
             {
-                if (!_unitOfWork.Check(Request.Headers["Authorization"]))
-                {
-                    return new RequestStatus
-                    {
-                        Status = false,
-                        StatusInfoMessage = "Kullanıcı Girişi Yapınız"
-                    };
-                }
+               
                 if (Id != null)
                 {
                     
-                    
+                    var userdata = _unitOfWork.getToken(Request.Headers["Authorization"]);
+
 
                     var checkVote = await _unitOfWork._entryRepository.CheckForVote(Id);
                     if (checkVote.Status)
@@ -327,7 +302,7 @@ namespace dictionary.Controllers
                         }else if(checkVote.StatusInfoMessage == "Eksi")
                         {
                             //await _unitOfWork._entryRepository.AddToVoted(new Guid(userdata.Claims.First(x => x.Type == "nameid").Value), Id, true);
-                            var updated =await _unitOfWork._entryRepository.UpdateToVoted(new Guid(_unitOfWork.userdata.Claims.First(x => x.Type == "nameid").Value), Id, true);
+                            var updated =await _unitOfWork._entryRepository.UpdateToVoted(new Guid(userdata.Claims.First(x => x.Type == "nameid").Value), Id, true);
                             await _unitOfWork._entryRepository.VotePlus(Id,true);
                             checkResult = true;
 
@@ -335,7 +310,7 @@ namespace dictionary.Controllers
                         }
                         else if (checkVote.StatusInfoMessage == "Boş" )
                         {
-                            await _unitOfWork._entryRepository.AddToVoted(new Guid(_unitOfWork.userdata.Claims.First(x => x.Type == "nameid").Value), Id, true);
+                            await _unitOfWork._entryRepository.AddToVoted(new Guid(userdata.Claims.First(x => x.Type == "nameid").Value), Id, true);
 
                             await _unitOfWork._entryRepository.VotePlus(Id, false);
                             checkResult = true;
@@ -394,14 +369,7 @@ namespace dictionary.Controllers
         {
             try
             {
-                if (!_unitOfWork.Check(Request.Headers["Authorization"]))
-                {
-                    return new RequestStatus
-                    {
-                        Status = false,
-                        StatusInfoMessage = "Kullanıcı Girişi Yapınız"
-                    };
-                }
+                    var userdata = _unitOfWork.getToken(Request.Headers["Authorization"]);
 
                 if (Id != null)
                 {
@@ -411,7 +379,7 @@ namespace dictionary.Controllers
                         if (checkVote.StatusInfoMessage == "Artı")
                         {
                             //await _unitOfWork._entryRepository.AddToVoted(new Guid(userdata.Claims.First(x => x.Type == "nameid").Value), Id, false);
-                            var updated = await _unitOfWork._entryRepository.UpdateToVoted(new Guid(_unitOfWork.userdata.Claims.First(x => x.Type == "nameid").Value), Id, false);
+                            var updated = await _unitOfWork._entryRepository.UpdateToVoted(new Guid(userdata.Claims.First(x => x.Type == "nameid").Value), Id, false);
 
                             var result = await _unitOfWork._entryRepository.VoteMinus(Id, true);
                             checkResult = true;
@@ -428,7 +396,7 @@ namespace dictionary.Controllers
                         }
                         else if (checkVote.StatusInfoMessage == "Boş")
                         {
-                            await _unitOfWork._entryRepository.AddToVoted(new Guid(_unitOfWork.userdata.Claims.First(x => x.Type == "nameid").Value), Id, false);
+                            await _unitOfWork._entryRepository.AddToVoted(new Guid(userdata.Claims.First(x => x.Type == "nameid").Value), Id, false);
 
                             var result = await _unitOfWork._entryRepository.VoteMinus(Id, false);
                             checkResult = true;

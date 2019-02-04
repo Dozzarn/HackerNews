@@ -30,10 +30,6 @@ namespace dictionary
         public JwtSecurityTokenHandler _tokenHandler { get; set; }
 
         private bool disposedValue = false; // To detect redundant calls
-
-        public JwtSecurityToken userdata { get; set; }
-
-
         public UnitOfWork(IConfiguration configuration)
         {
             _redisHandler = new RedisHandler();
@@ -54,15 +50,9 @@ namespace dictionary
 
         }
 
-        public bool Check(StringValues token)
+        public JwtSecurityToken getToken(StringValues token)
         {
-            var accesToken = token;
-            if (accesToken.ToString() == null)
-            {
-                return false;
-            }
-            userdata = _tokenHandler.ReadToken(accesToken) as JwtSecurityToken;
-            return true;
+            return _tokenHandler.ReadToken(token.ToString().Replace("Bearer ", "")) as JwtSecurityToken;
         }
 
 

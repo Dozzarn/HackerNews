@@ -19,13 +19,12 @@ namespace dictionary
         IEntryRepository _entryRepository { get; set; }
         IGenericRepository<T> _genericRepository { get; set; }
         RedisHandler _redisHandler { get; set; }
-        JwtSecurityToken userdata { get; set; }
         IConfiguration _configuration { get; set; }
 
 
 
 
-        bool Check(StringValues token);
+        JwtSecurityToken getToken(StringValues token);
         void Commit();
     }
 }

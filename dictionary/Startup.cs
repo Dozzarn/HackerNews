@@ -89,7 +89,7 @@ namespace dictionary
                 app.UseHsts();
             }
             //app.UseHttpsRedirection();
-            app.UseMvcWithDefaultRoute();
+            app.UseAuthentication();
             app.UseDeveloperExceptionPage();
             app.UseSwagger();
             app.UseSwaggerUI(c =>
@@ -97,7 +97,8 @@ namespace dictionary
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
                 c.RoutePrefix = "swagger";
             });
-            
+            app.UseMvcWithDefaultRoute();
+
         }
     }
 }

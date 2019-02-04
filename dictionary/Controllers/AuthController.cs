@@ -7,6 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 using dictionary.Model;
 using dictionary.Repository;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -110,14 +112,13 @@ namespace dictionary.Controllers
         /// Get User Activity Info
         /// </summary>
         /// <returns></returns>
-        [HttpGet("useractivity")]
+        [HttpGet("useractivity"),Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<TotalActivityDTO> UserActivity()
         {
             try
             {
-                if (!_unitOfWork.Check(Request.Headers["Authorization"]))
-                {
-                    var userId = new Guid(_unitOfWork.userdata.Claims.First(x => x.Type == "nameid").Value);
+                    var userdata = _unitOfWork.getToken(Request.Headers["Authorization"]);
+                    var userId = new Guid(userdata.Claims.First(x => x.Type == "nameid").Value);
                     var key = $"User:Activity:{userId}";
                     var isCached = await _unitOfWork._redisHandler.IsCached(key);
                     if (isCached == false)
@@ -132,15 +133,6 @@ namespace dictionary.Controllers
                         var data = JsonConvert.DeserializeObject<TotalActivityDTO>(await _unitOfWork._redisHandler.GetFromCache(key));
                         return await Task.FromResult(data);
                     }
-                }
-                else
-                {
-                    return await Task.FromResult(new TotalActivityDTO
-                    {
-                        Status = false,
-                        StatusInfoMessage = "Kullanıcı Girişi Yapınız"
-                    });
-                }
 
             }
             catch (Exception)
