@@ -23,6 +23,7 @@ namespace dictionary.Controllers
         private bool checkResult;
         bool isUpdated;
         private string allTitleData = "AllEntry:Data";
+        private string getAllSql = "select* from[Entry] a inner join[User] b on a.UserId=b.Id";
         public EntryController(IUnitOfWork<EntryDTO> unitOfWork)
         {
             _unitOfWork = unitOfWork;
@@ -41,8 +42,8 @@ namespace dictionary.Controllers
                 var isCached = await _unitOfWork._redisHandler.IsCached(allTitleData);
                 if (isCached == false)
                 {
-                    var sql = "select * from [Entry] a inner join [User] b on a.UserId=b.Id ";
-                    var result = await _unitOfWork._genericRepository.GetAllAsync(sql);
+
+                    var result = await _unitOfWork._genericRepository.GetAllAsync(getAllSql);
                     if (result != null)
                     {
                         await _unitOfWork._redisHandler.AddToCache(allTitleData, TimeSpan.FromMinutes(1), JsonConvert.SerializeObject(result));
@@ -103,6 +104,8 @@ namespace dictionary.Controllers
                     if (result != false)
                     {
                         _unitOfWork.Commit();
+                        _unitOfWork.UpdateAllCachedData(allTitleData, getAllSql);
+
                         return await Task.FromResult(new EntryForUpdateResultDTO
                         {
                             Status = true,
@@ -155,6 +158,8 @@ namespace dictionary.Controllers
                     if (result != false)
                     {
                         _unitOfWork.Commit();
+                        _unitOfWork.UpdateAllCachedData(allTitleData, getAllSql);
+
                         return await Task.FromResult(new RequestStatus
                         {
                             Status = true,
@@ -236,6 +241,9 @@ namespace dictionary.Controllers
                     if (isDeleted == true || isUpdated != false)
                     {
                         _unitOfWork.Commit();
+                        _unitOfWork.UpdateAllCachedData(allTitleData, getAllSql);
+
+
                         return await Task.FromResult(new RequestStatus
                         {
                             Status = true,
@@ -301,12 +309,11 @@ namespace dictionary.Controllers
                             });
                         }else if(checkVote.StatusInfoMessage == "Eksi")
                         {
-                            //await _unitOfWork._entryRepository.AddToVoted(new Guid(userdata.Claims.First(x => x.Type == "nameid").Value), Id, true);
                             var updated =await _unitOfWork._entryRepository.UpdateToVoted(new Guid(userdata.Claims.First(x => x.Type == "nameid").Value), Id, true);
                             await _unitOfWork._entryRepository.VotePlus(Id,true);
                             checkResult = true;
 
-
+                    
                         }
                         else if (checkVote.StatusInfoMessage == "Boş" )
                         {
@@ -319,7 +326,10 @@ namespace dictionary.Controllers
                          if (checkResult)
                             {
                                 _unitOfWork.Commit();
-                                return await Task.FromResult(new RequestStatus
+                            _unitOfWork.UpdateAllCachedData(allTitleData, getAllSql);
+
+
+                            return await Task.FromResult(new RequestStatus
                                 {
                                     Status = true,
                                     StatusInfoMessage = "+1 Artılandı"
@@ -378,7 +388,6 @@ namespace dictionary.Controllers
                     {
                         if (checkVote.StatusInfoMessage == "Artı")
                         {
-                            //await _unitOfWork._entryRepository.AddToVoted(new Guid(userdata.Claims.First(x => x.Type == "nameid").Value), Id, false);
                             var updated = await _unitOfWork._entryRepository.UpdateToVoted(new Guid(userdata.Claims.First(x => x.Type == "nameid").Value), Id, false);
 
                             var result = await _unitOfWork._entryRepository.VoteMinus(Id, true);
@@ -405,6 +414,9 @@ namespace dictionary.Controllers
                         if (checkResult)
                         {
                             _unitOfWork.Commit();
+                            _unitOfWork.UpdateAllCachedData(allTitleData, getAllSql);
+
+
                             return await Task.FromResult(new RequestStatus
                             {
                                 Status = true,

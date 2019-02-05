@@ -18,6 +18,7 @@ namespace dictionary.Controllers
     {
         private readonly IUnitOfWork<TitleDTO> _unitOfWork;
         private string allTitleData = "AllTitle:Data";
+        private string getAllSql = "select a.*,b.Entry from [Title] a inner join [Entry] b on a.EntryId=b.EntryId";
         public TitleController(IUnitOfWork<TitleDTO> unitOfWork)
         {
             _unitOfWork = unitOfWork;
@@ -68,6 +69,7 @@ namespace dictionary.Controllers
                 if (result && result2)
                 {
                     _unitOfWork.Commit();
+                    _unitOfWork.UpdateAllCachedData(allTitleData, getAllSql);
                     return await Task.FromResult(new TitleForInsertResultDTO
                     {
                         Status = true,
@@ -107,8 +109,7 @@ namespace dictionary.Controllers
                 var isCached = await _unitOfWork._redisHandler.IsCached(allTitleData);
                 if (isCached == false)
                 {
-                    var sql = "select a.*,b.Entry from [Title] a inner join [Entry] b on a.EntryId=b.EntryId";
-                    var data = await _unitOfWork._genericRepository.GetAllAsync(sql);
+                    var data = await _unitOfWork._genericRepository.GetAllAsync(getAllSql);
                     if (data != null)
                     {
                         await _unitOfWork._redisHandler.AddToCache(allTitleData, TimeSpan.FromMinutes(1), JsonConvert.SerializeObject(data));
@@ -182,7 +183,7 @@ namespace dictionary.Controllers
                         Status = true,
                         StatusInfoMessage = "Başarılı"
                     };
-                    await _unitOfWork._redisHandler.AddToCache(key, TimeSpan.FromMinutes(10), JsonConvert.SerializeObject(result));
+                    await _unitOfWork._redisHandler.AddToCache(key, TimeSpan.FromMinutes(1), JsonConvert.SerializeObject(result));
 
                     return await Task.FromResult(result);
                 }

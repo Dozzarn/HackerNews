@@ -112,28 +112,15 @@ namespace dictionary.Controllers
         /// Get User Activity Info
         /// </summary>
         /// <returns></returns>
-        [HttpGet("useractivity"),Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpGet("useractivity"), Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<TotalActivityDTO> UserActivity()
         {
             try
             {
-                    var userdata = _unitOfWork.getToken(Request.Headers["Authorization"]);
-                    var userId = new Guid(userdata.Claims.First(x => x.Type == "nameid").Value);
-                    var key = $"User:Activity:{userId}";
-                    var isCached = await _unitOfWork._redisHandler.IsCached(key);
-                    if (isCached == false)
-                    {
-                        var data = await _unitOfWork._authRepository.GetTotals(userId);
-                        await _unitOfWork._redisHandler.AddToCache(key, TimeSpan.FromMinutes(1), JsonConvert.SerializeObject(data));
-                        return await Task.FromResult(data);
-
-                    }
-                    else
-                    {
-                        var data = JsonConvert.DeserializeObject<TotalActivityDTO>(await _unitOfWork._redisHandler.GetFromCache(key));
-                        return await Task.FromResult(data);
-                    }
-
+                var userdata = _unitOfWork.getToken(Request.Headers["Authorization"]);
+                var userId = new Guid(userdata.Claims.First(x => x.Type == "nameid").Value);
+                var data = await _unitOfWork._authRepository.GetTotals(userId);
+                return await Task.FromResult(data);
             }
             catch (Exception)
             {
