@@ -68,8 +68,8 @@ namespace dictionary.Controllers
                
                 if (result && result2)
                 {
+                    UpdateAllCachedData(allTitleData, getAllSql);
                     _unitOfWork.Commit();
-                    _unitOfWork.UpdateAllCachedData(allTitleData, getAllSql);
                     return await Task.FromResult(new TitleForInsertResultDTO
                     {
                         Status = true,
@@ -95,6 +95,12 @@ namespace dictionary.Controllers
                 });
 
             }
+        }
+
+        public async void UpdateAllCachedData(string key, string sql)
+        {
+            var result = await _unitOfWork._genericRepository.GetAllAsync(sql);
+            await _unitOfWork._redisHandler.AddToCache(key, TimeSpan.FromMinutes(1), JsonConvert.SerializeObject(result));
         }
         /// <summary>
         /// Get All Title

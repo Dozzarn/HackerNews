@@ -21,9 +21,6 @@ namespace dictionary
         RedisHandler _redisHandler { get; set; }
         IConfiguration _configuration { get; set; }
 
-        void UpdateAllCachedData(string key, string sql);
-
-        void UpdateCachedData(string key, string sql, object param);
         JwtSecurityToken getToken(StringValues token);
         void Commit();
     }

@@ -104,7 +104,7 @@ namespace dictionary.Controllers
                     if (result != false)
                     {
                         _unitOfWork.Commit();
-                        _unitOfWork.UpdateAllCachedData(allTitleData, getAllSql);
+                        UpdateAllCachedData(allTitleData, getAllSql);
 
                         return await Task.FromResult(new EntryForUpdateResultDTO
                         {
@@ -137,6 +137,11 @@ namespace dictionary.Controllers
         }
 
 
+        public async void UpdateAllCachedData(string key, string sql)
+        {
+            var result = await _unitOfWork._genericRepository.GetAllAsync(sql);
+            await _unitOfWork._redisHandler.AddToCache(key, TimeSpan.FromMinutes(1), JsonConvert.SerializeObject(result));
+        }
         /// <summary>
         /// Insert Entry
         /// </summary>
@@ -157,8 +162,8 @@ namespace dictionary.Controllers
                     var result = await _unitOfWork._genericRepository.InsertAsync(sql, param);
                     if (result != false)
                     {
+                        UpdateAllCachedData(allTitleData, getAllSql);
                         _unitOfWork.Commit();
-                        _unitOfWork.UpdateAllCachedData(allTitleData, getAllSql);
 
                         return await Task.FromResult(new RequestStatus
                         {
@@ -240,8 +245,8 @@ namespace dictionary.Controllers
                     }
                     if (isDeleted == true || isUpdated != false)
                     {
+                        UpdateAllCachedData(allTitleData, getAllSql);
                         _unitOfWork.Commit();
-                        _unitOfWork.UpdateAllCachedData(allTitleData, getAllSql);
 
 
                         return await Task.FromResult(new RequestStatus
@@ -325,8 +330,8 @@ namespace dictionary.Controllers
                         }
                          if (checkResult)
                             {
+                            UpdateAllCachedData(allTitleData, getAllSql);
                                 _unitOfWork.Commit();
-                            _unitOfWork.UpdateAllCachedData(allTitleData, getAllSql);
 
 
                             return await Task.FromResult(new RequestStatus
@@ -413,8 +418,8 @@ namespace dictionary.Controllers
                         }
                         if (checkResult)
                         {
+                            UpdateAllCachedData(allTitleData, getAllSql);
                             _unitOfWork.Commit();
-                            _unitOfWork.UpdateAllCachedData(allTitleData, getAllSql);
 
 
                             return await Task.FromResult(new RequestStatus

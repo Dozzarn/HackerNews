@@ -56,16 +56,7 @@ namespace dictionary
             return _tokenHandler.ReadToken(token.ToString().Replace("Bearer ", "")) as JwtSecurityToken;
         }
 
-        public async void UpdateCachedData(string key,string sql,object param)
-        {
-            var result = await _genericRepository.GetByIdAsync(sql,param);
-            await _redisHandler.AddToCache(key, TimeSpan.FromMinutes(1), JsonConvert.SerializeObject(result));
-        }
-        public async void UpdateAllCachedData(string key, string sql)
-        {
-            var result = await _genericRepository.GetAllAsync(sql);
-            await _redisHandler.AddToCache(key, TimeSpan.FromMinutes(1), JsonConvert.SerializeObject(result));
-        }
+        
 
         public void Commit()
         {
