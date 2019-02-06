@@ -34,7 +34,7 @@ namespace dictionary.Controllers
         /// <param name="userForRegisterDTO"></param>
         /// <returns></returns>
         [HttpPost("register")]
-        public async Task<ActionResult<UserForRegisterResultDTO>> Register([FromBody]UserForRegisterDTO userForRegisterDTO)
+        public async Task<ActionResult> Register([FromBody]UserForRegisterDTO userForRegisterDTO)
         {
             UserForRegisterResultDTO result;
 
@@ -98,7 +98,7 @@ namespace dictionary.Controllers
         /// <param name="userForLoginDTO"></param>
         /// <returns></returns>
         [HttpPost("login")]
-        public async Task<ActionResult<UserForLoginResultDTO>> Login([FromBody]UserForLoginDTO userForLoginDTO)
+        public async Task<ActionResult> Login([FromBody]UserForLoginDTO userForLoginDTO)
         {
             var user = await _unitOfWork._authRepository.Login(userForLoginDTO.Username, userForLoginDTO.Password);
             if (user == null)
@@ -113,23 +113,23 @@ namespace dictionary.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("useractivity"), Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<TotalActivityDTO> UserActivity()
+        public async Task<ActionResult> UserActivity()
         {
             try
             {
                 var userdata = _unitOfWork.getToken(Request.Headers["Authorization"]);
                 var userId = new Guid(userdata.Claims.First(x => x.Type == "nameid").Value);
                 var data = await _unitOfWork._authRepository.GetTotals(userId);
-                return await Task.FromResult(data);
+                return await Task.FromResult(Ok(data));
             }
             catch (Exception)
             {
-                return await Task.FromResult(new TotalActivityDTO
-                {
-                    Status = false,
-                    StatusInfoMessage = "Bir Sorunla Karşılaşıldı"
-                });
-                throw;
+                return await Task.FromResult(Ok(
+                    new TotalActivityDTO
+                    {
+                        Status = false,
+                        StatusInfoMessage = "Bir Sorunla Karşılaşıldı"
+                    }));
             }
         }
 

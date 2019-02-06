@@ -29,6 +29,7 @@ namespace dictionary
 
         public IConfiguration _configuration { get; set; }
         public JwtSecurityTokenHandler _tokenHandler { get; set; }
+        public IHelperRepository _helperRepository { get; set; }
 
         private bool disposedValue = false; // To detect redundant calls
         public UnitOfWork(IConfiguration configuration)
@@ -48,6 +49,8 @@ namespace dictionary
             _authRepository = new AuthRepository(_transaction);
             _titleRepository = new TitleRepository(_transaction);
             _entryRepository = new EntryRepository(_transaction);
+            _helperRepository = new HelperRepository(_transaction);
+
 
         }
 
@@ -81,6 +84,7 @@ namespace dictionary
         {
             _authRepository = null;
             _titleRepository = null;
+            _helperRepository = null;
             _entryRepository = null;
             _genericRepository = null;
 

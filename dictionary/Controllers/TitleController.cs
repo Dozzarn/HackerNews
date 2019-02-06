@@ -31,7 +31,7 @@ namespace dictionary.Controllers
         /// <param name="title"></param>
         /// <returns></returns>
         [HttpPost("insert"), Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<TitleForInsertResultDTO> Insert([FromBody] TitleForInsertDTO title)
+        public async Task<IActionResult> Insert([FromBody] TitleForInsertDTO title)
         {
             try
             {
@@ -45,11 +45,11 @@ namespace dictionary.Controllers
 
                 if (isExists.Count !=0)
                 {
-                    return await Task.FromResult(new TitleForInsertResultDTO
+                    return await Task.FromResult(Ok(new TitleForInsertResultDTO
                     {
                         Status = false,
                         StatusInfoMessage = "Title Daha Önce Açılmış Kardeş"
-                    });
+                    }));
                 }
 
                 var tid = Guid.NewGuid();
@@ -70,29 +70,29 @@ namespace dictionary.Controllers
                 {
                     UpdateAllCachedData(allTitleData, getAllSql);
                     _unitOfWork.Commit();
-                    return await Task.FromResult(new TitleForInsertResultDTO
+                    return await Task.FromResult(Ok(new TitleForInsertResultDTO
                     {
                         Status = true,
                         StatusInfoMessage = "Title Başarıyla Açıldı"
-                    });
+                    }));
                 }
                 else
                 {
-                    return await Task.FromResult(new TitleForInsertResultDTO
+                    return await Task.FromResult(Ok(new TitleForInsertResultDTO
                     {
                         Status = false,
                         StatusInfoMessage = "Bır Sıkıntı oldi"
 
-                    });
+                    }));
                 }
             }
             catch (Exception)
             {
-                return await Task.FromResult(new TitleForInsertResultDTO
+                return await Task.FromResult(Ok(new TitleForInsertResultDTO
                 {
                     Status = false,
                     StatusInfoMessage = "Bir Sorunla Karşılaşıldı"
-                });
+                }));
 
             }
         }
@@ -102,12 +102,13 @@ namespace dictionary.Controllers
             var result = await _unitOfWork._genericRepository.GetAllAsync(sql);
             await _unitOfWork._redisHandler.AddToCache(key, TimeSpan.FromMinutes(1), JsonConvert.SerializeObject(result));
         }
+
         /// <summary>
         /// Get All Title
         /// </summary>
         /// <returns></returns>
         [HttpGet("getall")]
-        public async Task<TitleForGetAllDTO> GetAll()
+        public async Task<IActionResult> GetAll()
         {
 
             try
@@ -119,42 +120,42 @@ namespace dictionary.Controllers
                     if (data != null)
                     {
                         await _unitOfWork._redisHandler.AddToCache(allTitleData, TimeSpan.FromMinutes(1), JsonConvert.SerializeObject(data));
-                        return await Task.FromResult(new TitleForGetAllDTO
+                        return await Task.FromResult(Ok(new TitleForGetAllDTO
                         {
                             Titles = data,
                             Status = true,
                             StatusInfoMessage = "Başarılı"
-                        });
+                        }));
                     }
                     else
                     {
-                        return await Task.FromResult(new TitleForGetAllDTO
+                        return await Task.FromResult(Ok(new TitleForGetAllDTO
                         {
                             Status = false,
                             StatusInfoMessage = "başarısız"
-                        });
+                        }));
                     }
 
                 }
                 else
                 {
                     var data = JsonConvert.DeserializeObject<IEnumerable<TitleDTO>>(await _unitOfWork._redisHandler.GetFromCache(allTitleData));
-                    return await Task.FromResult(new TitleForGetAllDTO
+                    return await Task.FromResult(Ok(new TitleForGetAllDTO
                     {
                         Titles = data,
                         Status = true,
                         StatusInfoMessage = "Başarılı"
-                    });
+                    }));
 
                 }
             }
             catch (Exception)
             {
-                return await Task.FromResult(new TitleForGetAllDTO
+                return await Task.FromResult(Ok(new TitleForGetAllDTO
                 {
                     Status = false,
                     StatusInfoMessage = "Bir Sorunla Karşılaşıldı"
-                });
+                }));
 
                 throw;
             }
@@ -169,7 +170,7 @@ namespace dictionary.Controllers
         /// <param name="guid"></param>
         /// <returns></returns>
         [HttpPost("get")]
-        public async Task<TitleForGetDTO> Get([FromBody]Guid guid)
+        public async Task<IActionResult> Get([FromBody]Guid guid)
         {
             var key = $"OnlyTitle:{guid.ToString()}";
             var isCached = await _unitOfWork._redisHandler.IsCached(key);
@@ -191,19 +192,19 @@ namespace dictionary.Controllers
                     };
                     await _unitOfWork._redisHandler.AddToCache(key, TimeSpan.FromMinutes(1), JsonConvert.SerializeObject(result));
 
-                    return await Task.FromResult(result);
+                    return await Task.FromResult(Ok(result));
                 }
-                return await Task.FromResult(new TitleForGetDTO
+                return await Task.FromResult(Ok(new TitleForGetDTO
                 {
                     Title = title,
                     Status = false,
                     StatusInfoMessage = "Başarısız"
-                });
+                }));
             }
             else
             {
                 var result = JsonConvert.DeserializeObject<TitleForGetDTO>(await _unitOfWork._redisHandler.GetFromCache(key));
-                return await Task.FromResult(result);
+                return await Task.FromResult(Ok(result));
             }
 
         }

@@ -35,7 +35,7 @@ namespace dictionary.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("getall"),AllowAnonymous]
-        public async Task<EntryForGelAllDTO> GetAll()
+        public async Task<IActionResult> GetAll()
         {
             try
             {
@@ -47,40 +47,40 @@ namespace dictionary.Controllers
                     if (result != null)
                     {
                         await _unitOfWork._redisHandler.AddToCache(allTitleData, TimeSpan.FromMinutes(1), JsonConvert.SerializeObject(result));
-                        return await Task.FromResult(new EntryForGelAllDTO
+                        return await Task.FromResult(Ok(new EntryForGelAllDTO
                         {
                             AllEntry = result,
                             Status = true,
                             StatusInfoMessage = "Başarıyla Getirildi"
-                        });
+                        }));
                     }
                     else
                     {
-                        return await Task.FromResult(new EntryForGelAllDTO
+                        return await Task.FromResult(Ok(new EntryForGelAllDTO
                         {
                             Status = false,
                             StatusInfoMessage = "Data Bulunamadı"
-                        });
+                        }));
                     }
                 }
                 else
                 {
                     var data = JsonConvert.DeserializeObject<IEnumerable<EntryDTO>>(await _unitOfWork._redisHandler.GetFromCache(allTitleData));
-                    return await Task.FromResult(new EntryForGelAllDTO
+                    return await Task.FromResult(Ok(new EntryForGelAllDTO
                     {
                         AllEntry = data,
                         Status = true,
                         StatusInfoMessage = "Başarılı"
-                    });
+                    }));
                 }
             }
             catch (Exception)
             {
-                return await Task.FromResult(new EntryForGelAllDTO
+                return await Task.FromResult(Ok(new EntryForGelAllDTO
                 {
                     Status = false,
                     StatusInfoMessage = "Bir Sorunla Karşılaşıldı"
-                });
+                }));
                 throw;
             }
         }
@@ -91,7 +91,7 @@ namespace dictionary.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPatch("update")]
-        public async Task<EntryForUpdateResultDTO> UpdateEntry([FromBody]EntryForUpdateDTO model)
+        public async Task<IActionResult> UpdateEntry([FromBody]EntryForUpdateDTO model)
         {
             try
             {
@@ -106,33 +106,33 @@ namespace dictionary.Controllers
                         _unitOfWork.Commit();
                         UpdateAllCachedData(allTitleData, getAllSql);
 
-                        return await Task.FromResult(new EntryForUpdateResultDTO
+                        return await Task.FromResult(Ok(new EntryForUpdateResultDTO
                         {
                             Status = true,
                             StatusInfoMessage = "Güncelleme Başarıyla Yapıldı"
-                        });
+                        }));
                     }
-                    return await Task.FromResult(new EntryForUpdateResultDTO
+                    return await Task.FromResult(Ok(new EntryForUpdateResultDTO
                     {
                         Status = false,
                         StatusInfoMessage = "Güncelleme İşlemi Yapılamadı"
-                    });
+                    }));
                 }
-                return await Task.FromResult(new EntryForUpdateResultDTO
+                return await Task.FromResult(Ok(new EntryForUpdateResultDTO
                 {
                     Status = false,
                     StatusInfoMessage = "Eksikleri Doldurunuz"
-                });
+                }));
 
             }
             catch (Exception)
             {
 
-                return await Task.FromResult(new EntryForUpdateResultDTO
+                return await Task.FromResult(Ok(new EntryForUpdateResultDTO
                 {
                     Status = false,
                     StatusInfoMessage = "Bir Sorunla Karşılaşıldı"
-                });
+                }));
             }
         }
 
@@ -148,7 +148,7 @@ namespace dictionary.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost("insert")]
-        public async Task<RequestStatus> InsertEntry([FromBody] EntryForInsertDTO model)
+        public async Task<IActionResult> InsertEntry([FromBody] EntryForInsertDTO model)
         {
             try
             {
@@ -165,32 +165,32 @@ namespace dictionary.Controllers
                         UpdateAllCachedData(allTitleData, getAllSql);
                         _unitOfWork.Commit();
 
-                        return await Task.FromResult(new RequestStatus
+                        return await Task.FromResult(Ok(new RequestStatus
                         {
                             Status = true,
                             StatusInfoMessage = "İşlem Başarılı"
-                        });
+                        }));
                     }
-                    return await Task.FromResult(new RequestStatus
+                    return await Task.FromResult(Ok(new RequestStatus
                     {
                         Status = false,
                         StatusInfoMessage = "İşlem Başarısız"
-                    });
+                    }));
                 }
-                return await Task.FromResult(new RequestStatus
+                return await Task.FromResult(Ok(new RequestStatus
                 {
                     Status = false,
                     StatusInfoMessage = "Eksikleri Doldurunuz"
-                });
+                }));
             }
             catch (Exception)
             {
 
-                return await Task.FromResult(new RequestStatus
+                return await Task.FromResult(Ok(new RequestStatus
                 {
-                    Status =false,
+                    Status = false,
                     StatusInfoMessage = "Bir Sorunla Karşılaşıldı"
-                });
+                }));
             }
 
         }
@@ -201,7 +201,7 @@ namespace dictionary.Controllers
         /// <param name="Id"></param>
         /// <returns></returns>
         [HttpPost("delete")]
-        public async Task<RequestStatus> DeleteEntry([FromBody] Guid Id)
+        public async Task<IActionResult> DeleteEntry([FromBody] Guid Id)
         {
 
             bool isDeleted;
@@ -229,11 +229,11 @@ namespace dictionary.Controllers
                         }
                         else
                         {
-                            return await Task.FromResult(new RequestStatus
+                            return await Task.FromResult(Ok(new RequestStatus
                             {
                                 Status = false,
                                 StatusInfoMessage = "Kayıt Bulunamadı"
-                            });
+                            }));
                         }
                     }
                     else
@@ -249,38 +249,38 @@ namespace dictionary.Controllers
                         _unitOfWork.Commit();
 
 
-                        return await Task.FromResult(new RequestStatus
+                        return await Task.FromResult(Ok(new RequestStatus
                         {
                             Status = true,
                             StatusInfoMessage = "İşlem Başarılı"
-                        });
+                        }));
                     }
                     else
                     {
-                        return await Task.FromResult(new RequestStatus
+                        return await Task.FromResult(Ok(new RequestStatus
                         {
                             Status = false,
                             StatusInfoMessage = "Kayıt Bulunamadı"
-                        });
+                        }));
                     }
 
                 }
                 else
                 {
-                    return await Task.FromResult(new RequestStatus
+                    return await Task.FromResult(Ok(new RequestStatus
                     {
                         Status = false,
                         StatusInfoMessage = "Id Eksik"
-                    });
+                    }));
                 }
             }
             catch (Exception)
             {
-                return await Task.FromResult(new RequestStatus
+                return await Task.FromResult(Ok(new RequestStatus
                 {
                     Status = false,
                     StatusInfoMessage = "Bir Sorunla Karşılaşıldı"
-                });
+                }));
                 throw;
             }
         }
@@ -291,7 +291,7 @@ namespace dictionary.Controllers
         /// <param name="Id"></param>
         /// <returns></returns>
         [HttpPost("voteplus")]
-        public async Task<RequestStatus> VotePlus([FromBody] Guid Id)
+        public async Task<IActionResult> VotePlus([FromBody] Guid Id)
         {
             try
             {
@@ -307,11 +307,11 @@ namespace dictionary.Controllers
                     {
                         if (checkVote.StatusInfoMessage == "Artı")
                         {
-                            return await Task.FromResult(new RequestStatus
+                            return await Task.FromResult(Ok(new RequestStatus
                             {
                                 Status = false,
                                 StatusInfoMessage = "Daha Önce Artıladınız"
-                            });
+                            }));
                         }else if(checkVote.StatusInfoMessage == "Eksi")
                         {
                             var updated =await _unitOfWork._entryRepository.UpdateToVoted(new Guid(userdata.Claims.First(x => x.Type == "nameid").Value), Id, true);
@@ -334,43 +334,43 @@ namespace dictionary.Controllers
                                 _unitOfWork.Commit();
 
 
-                            return await Task.FromResult(new RequestStatus
-                                {
-                                    Status = true,
-                                    StatusInfoMessage = "+1 Artılandı"
-                                });
+                            return await Task.FromResult(Ok(new RequestStatus
+                            {
+                                Status = true,
+                                StatusInfoMessage = "+1 Artılandı"
+                            }));
                             }
                             else
                             {
-                                return await Task.FromResult(new RequestStatus
+                                return await Task.FromResult(Ok(new RequestStatus
                                 {
                                     Status = false,
                                     StatusInfoMessage = "başarısız"
-                                });
+                                }));
                             }
                     }
                     else
                     {
-                        return await Task.FromResult(checkVote);
+                        return await Task.FromResult(Ok(checkVote));
                     }
                 }
                 else
                 {
-                    return await Task.FromResult(new RequestStatus
+                    return await Task.FromResult(Ok(new RequestStatus
                     {
                         Status = false,
                         StatusInfoMessage = "Id Boş"
-                    });
+                    }));
                 }
             }
             catch (Exception)
             {
 
-                return await Task.FromResult(new RequestStatus
+                return await Task.FromResult(Ok(new RequestStatus
                 {
                     Status = false,
                     StatusInfoMessage = "Bir Sorunla Karşılaşıldı"
-                });
+                }));
             }
         }
 
@@ -380,7 +380,7 @@ namespace dictionary.Controllers
         /// <param name="Id"></param>
         /// <returns></returns>
         [HttpPost("voteminus")]
-        public async Task<RequestStatus> VoteMinus([FromBody] Guid Id)
+        public async Task<IActionResult> VoteMinus([FromBody] Guid Id)
         {
             try
             {
@@ -401,11 +401,11 @@ namespace dictionary.Controllers
                         else if (checkVote.StatusInfoMessage == "Eksi")
                         {
 
-                            return await Task.FromResult(new RequestStatus
+                            return await Task.FromResult(Ok(new RequestStatus
                             {
                                 Status = false,
                                 StatusInfoMessage = "Daha Önce Eksilediniz"
-                            });
+                            }));
 
                         }
                         else if (checkVote.StatusInfoMessage == "Boş")
@@ -422,43 +422,43 @@ namespace dictionary.Controllers
                             _unitOfWork.Commit();
 
 
-                            return await Task.FromResult(new RequestStatus
+                            return await Task.FromResult(Ok(new RequestStatus
                             {
                                 Status = true,
                                 StatusInfoMessage = "+1 Eksilendi"
-                            });
+                            }));
                         }
                         else
                         {
-                            return await Task.FromResult(new RequestStatus
+                            return await Task.FromResult(Ok(new RequestStatus
                             {
                                 Status = false,
                                 StatusInfoMessage = "başarısız"
-                            });
+                            }));
                         }
                     }
                     else
                     {
-                        return await Task.FromResult(checkVote);
+                        return await Task.FromResult(Ok(checkVote));
                     }
                 }
                 else
                 {
-                    return await Task.FromResult(new RequestStatus
+                    return await Task.FromResult(Ok(new RequestStatus
                     {
                         Status = false,
                         StatusInfoMessage = "Id Boş"
-                    });
+                    }));
                 }
             }
             catch (Exception)
             {
 
-                return await Task.FromResult(new RequestStatus
+                return await Task.FromResult(Ok(new RequestStatus
                 {
                     Status = false,
                     StatusInfoMessage = "Bir Sorunla Karşılaşıldı"
-                });
+                }));
             }
         }
     }

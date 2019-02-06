@@ -16,8 +16,12 @@ namespace dictionary
         IAuthRepository _authRepository { get; set; }
         ITitleRepository _titleRepository { get; set; }
         JwtSecurityTokenHandler _tokenHandler { get; set; }
+
         IEntryRepository _entryRepository { get; set; }
+
         IGenericRepository<T> _genericRepository { get; set; }
+        IHelperRepository _helperRepository { get; set; }
+
         RedisHandler _redisHandler { get; set; }
         IConfiguration _configuration { get; set; }
 
