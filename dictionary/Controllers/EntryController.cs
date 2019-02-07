@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
 
@@ -24,9 +25,10 @@ namespace dictionary.Controllers
         bool isUpdated;
         private string allTitleData = "AllEntry:Data";
         private string getAllSql = "select* from[Entry] a inner join[User] b on a.UserId=b.Id";
-        public EntryController(IUnitOfWork<EntryDTO> unitOfWork)
+        public EntryController(IUnitOfWork<EntryDTO> unitOfWork,ILogger<EntryController> logger)
         {
             _unitOfWork = unitOfWork;
+            _unitOfWork._logger = logger;
         }
 
 
@@ -74,8 +76,9 @@ namespace dictionary.Controllers
                     }));
                 }
             }
-            catch (Exception)
+            catch (Exception exp)
             {
+                _unitOfWork._logger.LogInformation($"Exception : {exp}");
                 return await Task.FromResult(Ok(new EntryForGelAllDTO
                 {
                     Status = false,
@@ -95,7 +98,8 @@ namespace dictionary.Controllers
         {
             try
             {
-               
+                _unitOfWork._logger.LogInformation($"Update : {JsonConvert.SerializeObject(model)}");
+
                 if (!string.IsNullOrEmpty(model.Entry) &&  !string.IsNullOrEmpty(model.EntryId.ToString()))
                 {
                     var sql = "update [Entry] set Entry =@e where EntryId=@ei";
@@ -125,8 +129,9 @@ namespace dictionary.Controllers
                 }));
 
             }
-            catch (Exception)
+            catch (Exception exp)
             {
+                _unitOfWork._logger.LogInformation($"Exception : {exp}");
 
                 return await Task.FromResult(Ok(new EntryForUpdateResultDTO
                 {
@@ -137,11 +142,6 @@ namespace dictionary.Controllers
         }
 
 
-        public async void UpdateAllCachedData(string key, string sql)
-        {
-            var result = await _unitOfWork._genericRepository.GetAllAsync(sql);
-            await _unitOfWork._redisHandler.AddToCache(key, TimeSpan.FromMinutes(1), JsonConvert.SerializeObject(result));
-        }
         /// <summary>
         /// Insert Entry
         /// </summary>
@@ -153,11 +153,14 @@ namespace dictionary.Controllers
             try
             {
                 var userdata = _unitOfWork.getToken(Request.Headers["Authorization"]);
+                _unitOfWork._logger.LogInformation($"Update : {JsonConvert.SerializeObject(model)}");
 
                 if (model.Entry != null && model.TitleId != null)
                 {
                     var sql = "insert into [Entry] (Entry,TitleId,UserId) values (@e,@ti,@ui)";
                     var uid = new Guid(userdata.Claims.First(x => x.Type == "nameid").Value);
+                    _unitOfWork._logger.LogInformation($"Update : User {uid}");
+
                     var param = new { e = model.Entry, ti = model.TitleId, ui = uid };
                     var result = await _unitOfWork._genericRepository.InsertAsync(sql, param);
                     if (result != false)
@@ -183,8 +186,10 @@ namespace dictionary.Controllers
                     StatusInfoMessage = "Eksikleri Doldurunuz"
                 }));
             }
-            catch (Exception)
+            catch (Exception exp)
             {
+                _unitOfWork._logger.LogInformation($"Exception : {exp}");
+
 
                 return await Task.FromResult(Ok(new RequestStatus
                 {
@@ -207,7 +212,8 @@ namespace dictionary.Controllers
             bool isDeleted;
             try
             {
-               
+                    _unitOfWork._logger.LogInformation($"Delete :  {Id.ToString()}");
+
                 if (Id != null)
                 {
                     var isBinded = await _unitOfWork._titleRepository.IsBinded(Id);
@@ -274,8 +280,10 @@ namespace dictionary.Controllers
                     }));
                 }
             }
-            catch (Exception)
+            catch (Exception exp)
             {
+                _unitOfWork._logger.LogInformation($"Exception : {exp}");
+
                 return await Task.FromResult(Ok(new RequestStatus
                 {
                     Status = false,
@@ -295,7 +303,8 @@ namespace dictionary.Controllers
         {
             try
             {
-               
+                    _unitOfWork._logger.LogInformation($"Vote Plus : {Id.ToString()}");
+
                 if (Id != null)
                 {
                     
@@ -363,8 +372,9 @@ namespace dictionary.Controllers
                     }));
                 }
             }
-            catch (Exception)
+            catch (Exception exp)
             {
+                _unitOfWork._logger.LogInformation($"Exception : {exp}");
 
                 return await Task.FromResult(Ok(new RequestStatus
                 {
@@ -385,6 +395,7 @@ namespace dictionary.Controllers
             try
             {
                     var userdata = _unitOfWork.getToken(Request.Headers["Authorization"]);
+                _unitOfWork._logger.LogInformation($"Vote Minus : {Id.ToString()}");
 
                 if (Id != null)
                 {
@@ -451,8 +462,9 @@ namespace dictionary.Controllers
                     }));
                 }
             }
-            catch (Exception)
+            catch (Exception exp)
             {
+                _unitOfWork._logger.LogInformation($"Exception : {exp}");
 
                 return await Task.FromResult(Ok(new RequestStatus
                 {
@@ -461,5 +473,14 @@ namespace dictionary.Controllers
                 }));
             }
         }
+
+
+
+        public async void UpdateAllCachedData(string key, string sql)
+        {
+            var result = await _unitOfWork._genericRepository.GetAllAsync(sql);
+            await _unitOfWork._redisHandler.AddToCache(key, TimeSpan.FromMinutes(1), JsonConvert.SerializeObject(result));
+        }
+
     }
 }

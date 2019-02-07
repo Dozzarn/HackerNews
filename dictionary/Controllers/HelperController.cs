@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using dictionary.Model;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace dictionary.Controllers
@@ -14,9 +15,10 @@ namespace dictionary.Controllers
     public class HelperController : ControllerBase
     {
         private readonly IUnitOfWork<SearchDTO> _unitOfWork;
-        public HelperController(IUnitOfWork<SearchDTO> unitOfWork)
+        public HelperController(IUnitOfWork<SearchDTO> unitOfWork,ILogger<HelperController> logger)
         {
             _unitOfWork = unitOfWork;
+            _unitOfWork._logger = logger;
         }
 
         [HttpPost("search")]
@@ -25,10 +27,13 @@ namespace dictionary.Controllers
             //TODO: More Test
             try
             {
+                _unitOfWork._logger.LogInformation($"Searched for {searchDTO.Text}");
                 if (!string.IsNullOrEmpty(searchDTO.Text))
                 {
                     var key = $"Search:{searchDTO.Text}";
                     var isCached = await _unitOfWork._redisHandler.IsCached(key);
+                    _unitOfWork._logger.LogInformation($"Is Cached {isCached}");
+
                     if (!isCached)
                     {
                         var data = await _unitOfWork._helperRepository.Search(searchDTO);
@@ -63,8 +68,10 @@ namespace dictionary.Controllers
                     }));
                 }
             }
-            catch (Exception)
+            catch (Exception exp)
             {
+                _unitOfWork._logger.LogInformation($"Exception: {exp}");
+
                 return await Task.FromResult(Ok(new SearchForRequestDTO
                 {
                     Status = false,

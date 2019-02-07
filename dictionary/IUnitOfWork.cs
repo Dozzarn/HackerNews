@@ -1,6 +1,7 @@
 ﻿using dictionary.Helpers;
 using dictionary.Repository;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using System;
 using System.Collections.Generic;
@@ -21,7 +22,7 @@ namespace dictionary
 
         IGenericRepository<T> _genericRepository { get; set; }
         IHelperRepository _helperRepository { get; set; }
-
+        ILogger _logger { get; set; }
         RedisHandler _redisHandler { get; set; }
         IConfiguration _configuration { get; set; }
 

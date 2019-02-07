@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace dictionary.Controllers
@@ -19,9 +20,10 @@ namespace dictionary.Controllers
         private readonly IUnitOfWork<TitleDTO> _unitOfWork;
         private string allTitleData = "AllTitle:Data";
         private string getAllSql = "select a.*,b.Entry from [Title] a inner join [Entry] b on a.EntryId=b.EntryId";
-        public TitleController(IUnitOfWork<TitleDTO> unitOfWork)
+        public TitleController(IUnitOfWork<TitleDTO> unitOfWork,ILogger<TitleController> logger)
         {
             _unitOfWork = unitOfWork;
+            _unitOfWork._logger = logger;
         }
 
       
@@ -35,7 +37,7 @@ namespace dictionary.Controllers
         {
             try
             {
-              
+                _unitOfWork._logger.LogInformation($"Title Insert:  {JsonConvert.SerializeObject(title)}");
                 var userdata = _unitOfWork.getToken(Request.Headers["Authorization"]);
 
                 var sql = "select * from [Title]";
@@ -55,6 +57,7 @@ namespace dictionary.Controllers
                 var tid = Guid.NewGuid();
                 var uid = new Guid(userdata.Claims.First(x => x.Type == "nameid").Value);
                 var eid = Guid.NewGuid();
+                _unitOfWork._logger.LogInformation($"Title Insert: User {uid}");
 
                 sql = "insert into [Entry] (EntryId,Entry,UserId,TitleId) values(@ei,@e,@ui,@ti)";
 
@@ -86,8 +89,10 @@ namespace dictionary.Controllers
                     }));
                 }
             }
-            catch (Exception)
+            catch (Exception exp)
             {
+                _unitOfWork._logger.LogInformation($"Exception :  {exp}");
+
                 return await Task.FromResult(Ok(new TitleForInsertResultDTO
                 {
                     Status = false,
@@ -149,8 +154,10 @@ namespace dictionary.Controllers
 
                 }
             }
-            catch (Exception)
+            catch (Exception exp )
             {
+                _unitOfWork._logger.LogInformation($"Exception :  {exp}");
+
                 return await Task.FromResult(Ok(new TitleForGetAllDTO
                 {
                     Status = false,
@@ -172,41 +179,59 @@ namespace dictionary.Controllers
         [HttpPost("get")]
         public async Task<IActionResult> Get([FromBody]Guid guid)
         {
-            var key = $"OnlyTitle:{guid.ToString()}";
-            var isCached = await _unitOfWork._redisHandler.IsCached(key);
-            if (isCached == false)
+            try
             {
-                var sql = "select * from [Title] where TitleId=@id";
-                var param = new { id = guid };
-                var title = await _unitOfWork._genericRepository.GetByIdAsync(sql, param);
-                var entries = await _unitOfWork._entryRepository.GetAllEntryForTitle(guid);
+                _unitOfWork._logger.LogInformation($"Title Get  :  {guid.ToString()}");
 
-                if (title != null)
+                var key = $"OnlyTitle:{guid.ToString()}";
+                var isCached = await _unitOfWork._redisHandler.IsCached(key);
+                _unitOfWork._logger.LogInformation($"Title Get  : Is cached {isCached}");
+
+                if (isCached == false)
                 {
-                    var result = new TitleForGetDTO
+                    var sql = "select * from [Title] where TitleId=@id";
+                    var param = new { id = guid };
+                    var title = await _unitOfWork._genericRepository.GetByIdAsync(sql, param);
+                    var entries = await _unitOfWork._entryRepository.GetAllEntryForTitle(guid);
+
+                    if (title != null)
+                    {
+                        var result = new TitleForGetDTO
+                        {
+                            Title = title,
+                            Entries = entries,
+                            Status = true,
+                            StatusInfoMessage = "Başarılı"
+                        };
+                        await _unitOfWork._redisHandler.AddToCache(key, TimeSpan.FromMinutes(1), JsonConvert.SerializeObject(result));
+
+                        return await Task.FromResult(Ok(result));
+                    }
+                    return await Task.FromResult(Ok(new TitleForGetDTO
                     {
                         Title = title,
-                        Entries = entries,
-                        Status = true,
-                        StatusInfoMessage = "Başarılı"
-                    };
-                    await _unitOfWork._redisHandler.AddToCache(key, TimeSpan.FromMinutes(1), JsonConvert.SerializeObject(result));
-
+                        Status = false,
+                        StatusInfoMessage = "Başarısız"
+                    }));
+                }
+                else
+                {
+                    var result = JsonConvert.DeserializeObject<TitleForGetDTO>(await _unitOfWork._redisHandler.GetFromCache(key));
                     return await Task.FromResult(Ok(result));
                 }
-                return await Task.FromResult(Ok(new TitleForGetDTO
-                {
-                    Title = title,
-                    Status = false,
-                    StatusInfoMessage = "Başarısız"
-                }));
-            }
-            else
-            {
-                var result = JsonConvert.DeserializeObject<TitleForGetDTO>(await _unitOfWork._redisHandler.GetFromCache(key));
-                return await Task.FromResult(Ok(result));
-            }
 
+            }
+            catch (Exception exp)
+            {
+                _unitOfWork._logger.LogInformation($"Exception :  {exp}");
+
+                return await Task.FromResult(Ok(new RequestStatus
+                {
+                    Status = false,
+                    StatusInfoMessage = "Bir Sorun Oldu"
+                }));
+                throw;
+            }
         }
 
 

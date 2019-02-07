@@ -46,6 +46,11 @@ namespace dictionary
                 };
 
             });
+            services.AddLogging(lb =>
+            {
+                lb.AddConfiguration(Configuration.GetSection("Logging"));
+                lb.AddFile(o => o.RootPath = AppContext.BaseDirectory);
+            });
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Info

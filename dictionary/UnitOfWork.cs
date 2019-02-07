@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using dictionary.Helpers;
 using dictionary.Repository;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
 
@@ -26,7 +27,7 @@ namespace dictionary
         public RedisHandler _redisHandler { get; set; }
         public IEntryRepository _entryRepository { get; set; }
         public IGenericRepository<T> _genericRepository { get; set; }
-
+        public  ILogger _logger { get; set; }
         public IConfiguration _configuration { get; set; }
         public JwtSecurityTokenHandler _tokenHandler { get; set; }
         public IHelperRepository _helperRepository { get; set; }
@@ -39,8 +40,6 @@ namespace dictionary
             _connection = new SqlConnection(_configuration.GetSection("Appsettings:ConnectionString").Value);
             _connection.Open();
             _transaction = _connection.BeginTransaction();
-
-
 
 
 
