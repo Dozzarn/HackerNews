@@ -37,6 +37,8 @@ namespace dictionary
         {
             _redisHandler = new RedisHandler();
             _configuration = configuration;
+            //_redisHandler = new RedisHandler(_configuration);
+
             _connection = new SqlConnection(_configuration.GetSection("Appsettings:ConnectionString").Value);
             _connection.Open();
             _transaction = _connection.BeginTransaction();
@@ -130,7 +132,7 @@ namespace dictionary
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             Dispose(true);
             // TODO: uncomment the following line if the finalizer is overridden above.
-            //GC.SuppressFinalize(this);
+            GC.SuppressFinalize(this);
         }
         #endregion
 

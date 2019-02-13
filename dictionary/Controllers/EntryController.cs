@@ -16,7 +16,7 @@ using Newtonsoft.Json;
 namespace dictionary.Controllers
 {
     [Route("api/[controller]")]
-    [ApiController,Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ApiController, Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class EntryController : ControllerBase
     {
 
@@ -25,7 +25,7 @@ namespace dictionary.Controllers
         bool isUpdated;
         private string allTitleData = "AllEntry:Data";
         private string getAllSql = "select* from[Entry] a inner join[User] b on a.UserId=b.Id";
-        public EntryController(IUnitOfWork<EntryDTO> unitOfWork,ILogger<EntryController> logger)
+        public EntryController(IUnitOfWork<EntryDTO> unitOfWork, ILogger<EntryController> logger)
         {
             _unitOfWork = unitOfWork;
             _unitOfWork._logger = logger;
@@ -36,7 +36,7 @@ namespace dictionary.Controllers
         /// Get All Entry
         /// </summary>
         /// <returns></returns>
-        [HttpGet("getall"),AllowAnonymous]
+        [HttpGet("getall")]
         public async Task<IActionResult> GetAll()
         {
             try
@@ -100,7 +100,7 @@ namespace dictionary.Controllers
             {
                 _unitOfWork._logger.LogInformation($"Update : {JsonConvert.SerializeObject(model)}");
 
-                if (!string.IsNullOrEmpty(model.Entry) &&  !string.IsNullOrEmpty(model.EntryId.ToString()))
+                if (!string.IsNullOrEmpty(model.Entry) && !string.IsNullOrEmpty(model.EntryId.ToString()))
                 {
                     var sql = "update [Entry] set Entry =@e where EntryId=@ei";
                     var param = new { e = model.Entry, ei = model.EntryId };
@@ -212,7 +212,7 @@ namespace dictionary.Controllers
             bool isDeleted;
             try
             {
-                    _unitOfWork._logger.LogInformation($"Delete :  {Id.ToString()}");
+                _unitOfWork._logger.LogInformation($"Delete :  {Id.ToString()}");
 
                 if (Id != null)
                 {
@@ -228,10 +228,10 @@ namespace dictionary.Controllers
                             isBinded.EntryId = second.EntryId;
                             sql = "update [Title] set EntryId=@ei";
                             var param = new { ei = Id };
-                            isUpdated = await _unitOfWork._genericRepository.UpdateAsync(sql,param);
+                            isUpdated = await _unitOfWork._genericRepository.UpdateAsync(sql, param);
                             _unitOfWork._entryRepository.DeleteFromVoted(Id);
                             sql = "delete from [Entry] where EntryId=@ei";
-                            isDeleted = await _unitOfWork._genericRepository.DeleteAsync(sql,param);
+                            isDeleted = await _unitOfWork._genericRepository.DeleteAsync(sql, param);
                         }
                         else
                         {
@@ -247,7 +247,7 @@ namespace dictionary.Controllers
                         var sql = "delete from [Entry] where EntryId=@ei";
                         var param = new { ei = Id };
                         _unitOfWork._entryRepository.DeleteFromVoted(Id);
-                        isDeleted = await _unitOfWork._genericRepository.DeleteAsync(sql,param);
+                        isDeleted = await _unitOfWork._genericRepository.DeleteAsync(sql, param);
                     }
                     if (isDeleted == true || isUpdated != false)
                     {
@@ -303,11 +303,11 @@ namespace dictionary.Controllers
         {
             try
             {
-                    _unitOfWork._logger.LogInformation($"Vote Plus : {Id.ToString()}");
+                _unitOfWork._logger.LogInformation($"Vote Plus : {Id.ToString()}");
 
                 if (Id != null)
                 {
-                    
+
                     var userdata = _unitOfWork.getToken(Request.Headers["Authorization"]);
 
 
@@ -321,15 +321,16 @@ namespace dictionary.Controllers
                                 Status = false,
                                 StatusInfoMessage = "Daha Önce Artıladınız"
                             }));
-                        }else if(checkVote.StatusInfoMessage == "Eksi")
+                        }
+                        else if (checkVote.StatusInfoMessage == "Eksi")
                         {
-                            var updated =await _unitOfWork._entryRepository.UpdateToVoted(new Guid(userdata.Claims.First(x => x.Type == "nameid").Value), Id, true);
-                            await _unitOfWork._entryRepository.VotePlus(Id,true);
+                            var updated = await _unitOfWork._entryRepository.UpdateToVoted(new Guid(userdata.Claims.First(x => x.Type == "nameid").Value), Id, true);
+                            await _unitOfWork._entryRepository.VotePlus(Id, true);
                             checkResult = true;
 
-                    
+
                         }
-                        else if (checkVote.StatusInfoMessage == "Boş" )
+                        else if (checkVote.StatusInfoMessage == "Boş")
                         {
                             await _unitOfWork._entryRepository.AddToVoted(new Guid(userdata.Claims.First(x => x.Type == "nameid").Value), Id, true);
 
@@ -337,10 +338,10 @@ namespace dictionary.Controllers
                             checkResult = true;
 
                         }
-                         if (checkResult)
-                            {
+                        if (checkResult)
+                        {
                             UpdateAllCachedData(allTitleData, getAllSql);
-                                _unitOfWork.Commit();
+                            _unitOfWork.Commit();
 
 
                             return await Task.FromResult(Ok(new RequestStatus
@@ -348,15 +349,15 @@ namespace dictionary.Controllers
                                 Status = true,
                                 StatusInfoMessage = "+1 Artılandı"
                             }));
-                            }
-                            else
+                        }
+                        else
+                        {
+                            return await Task.FromResult(Ok(new RequestStatus
                             {
-                                return await Task.FromResult(Ok(new RequestStatus
-                                {
-                                    Status = false,
-                                    StatusInfoMessage = "başarısız"
-                                }));
-                            }
+                                Status = false,
+                                StatusInfoMessage = "başarısız"
+                            }));
+                        }
                     }
                     else
                     {
@@ -394,7 +395,7 @@ namespace dictionary.Controllers
         {
             try
             {
-                    var userdata = _unitOfWork.getToken(Request.Headers["Authorization"]);
+                var userdata = _unitOfWork.getToken(Request.Headers["Authorization"]);
                 _unitOfWork._logger.LogInformation($"Vote Minus : {Id.ToString()}");
 
                 if (Id != null)
@@ -478,8 +479,12 @@ namespace dictionary.Controllers
 
         public async void UpdateAllCachedData(string key, string sql)
         {
-            var result = await _unitOfWork._genericRepository.GetAllAsync(sql);
-            await _unitOfWork._redisHandler.AddToCache(key, TimeSpan.FromMinutes(1), JsonConvert.SerializeObject(result));
+            var isCached = await _unitOfWork._redisHandler.IsCached(key);
+            if (isCached)
+            {
+                var result = await _unitOfWork._genericRepository.GetAllAsync(sql);
+                await _unitOfWork._redisHandler.AddToCache(key, TimeSpan.FromMinutes(1), JsonConvert.SerializeObject(result));
+            }
         }
 
     }

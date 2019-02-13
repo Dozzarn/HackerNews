@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
 namespace dictionary.Helpers
 {
@@ -9,12 +10,19 @@ namespace dictionary.Helpers
     {
         private readonly ConnectionMultiplexer Connection;
         private readonly IDatabaseAsync db;
+        //private readonly IConfiguration _configuration;
+        //public RedisHandler(IConfiguration configuration)
+        //{
+        //    _configuration = configuration;
+        //    Connection = ConnectionMultiplexer.Connect(_configuration.GetSection("Redis:Url").Value);
+        //    db = Connection.GetDatabase(int.Parse(_configuration.GetSection("Redis:Database").Value));
+        //}
+
         public RedisHandler()
         {
             Connection = ConnectionMultiplexer.Connect("localhost:6379");
             db = Connection.GetDatabase(1);
         }
-
         public async Task<string> GetFromCache(string key)
         {
             var isCached = await IsCached(key);
@@ -41,8 +49,8 @@ namespace dictionary.Helpers
 
         public async Task<bool> IsCached(string key)
         {
-            var cachedData = await db.StringGetAsync(key);
-            if (string.IsNullOrEmpty(cachedData))
+            var cachedData = await db.KeyExistsAsync(key);
+            if (!cachedData)
             {
                 return await Task.FromResult(false);
             }

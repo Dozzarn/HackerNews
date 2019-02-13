@@ -13,8 +13,31 @@ namespace dictionary.Repository
         {
 
         }
+
+        public async Task<StatisticForSiteDTO> GetAllStatistic()
+        {
+            var sql = "select count(*) from [Entry];select count(*) from [Title];select count(*) from [Voted];select count(*) from [Entry] where Time=@t;select count(*)from [Entry] where Time=@y;select top 1 * from [User] order by Id desc  ;Select count(*) from [User]";
+            var data = await Connection.QueryMultipleAsync(sql, new { t = DateTime.Now, y = DateTime.Now.AddDays(-1) },transaction:Transaction);
+            var result = new StatisticForSiteDTO
+            {
+                EntryCount = await data.ReadAsync<int>(),
+                TitleCount = await data.ReadAsync<int>(),
+                VoteCount = await data.ReadAsync<int>(),
+                TodayEntryCount = await data.ReadAsync<int>(),
+                YesterdayEntryCount = await data.ReadAsync<int>(),
+                LastUser = await data.ReadAsync<UserDTO>(),
+                UserCount = await data.ReadAsync<int>(),
+                Status = true,
+                StatusInfoMessage="Başarılı"
+
+            };
+            data.Dispose();
+            return await Task.FromResult(result);
+        } 
+
         public async Task<SearchForRequestDTO> Search(SearchDTO model)
         {
+
 
             if (!string.IsNullOrEmpty(model.Text))
             {
@@ -47,5 +70,6 @@ namespace dictionary.Repository
 
             }
         }
+
     }
 }

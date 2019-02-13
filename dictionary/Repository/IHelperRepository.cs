@@ -9,5 +9,7 @@ namespace dictionary.Repository
     public interface IHelperRepository
     {
         Task<SearchForRequestDTO> Search(SearchDTO model);
+
+        Task<StatisticForSiteDTO> GetAllStatistic();
     }
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace dictionary.Model
 {
-    public class IdForRequest:RequestStatus
+    public class IdForRequest
     {
         [JsonProperty("i")]
         public Guid Id { get; set; }

@@ -51,6 +51,12 @@ namespace dictionary
                 lb.AddConfiguration(Configuration.GetSection("Logging"));
                 lb.AddFile(o => o.RootPath = AppContext.BaseDirectory);
             });
+            services.AddCors(o => o.AddPolicy("MyPolicy", builder =>
+            {
+                builder.AllowAnyOrigin()
+                       .AllowAnyMethod()
+                       .AllowAnyHeader();
+            }));
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Info
@@ -94,6 +100,7 @@ namespace dictionary
                 app.UseHsts();
             }
             //app.UseHttpsRedirection();
+            app.UseCors("MyPolicy");
             app.UseAuthentication();
             app.UseDeveloperExceptionPage();
             app.UseSwagger();
