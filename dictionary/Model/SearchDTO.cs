@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace dictionary.Model
 {
-    public class IdForRequest
+    public class SearchDTO
     {
-        [JsonProperty("i")]
-        public Guid Id { get; set; }
+        [JsonProperty("t")]
+        public string Text { get; set; }
+        
     }
 }

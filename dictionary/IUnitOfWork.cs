@@ -1,6 +1,7 @@
 ﻿using dictionary.Helpers;
 using dictionary.Repository;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using System;
 using System.Collections.Generic;
@@ -16,16 +17,16 @@ namespace dictionary
         IAuthRepository _authRepository { get; set; }
         ITitleRepository _titleRepository { get; set; }
         JwtSecurityTokenHandler _tokenHandler { get; set; }
+
         IEntryRepository _entryRepository { get; set; }
+
         IGenericRepository<T> _genericRepository { get; set; }
+        IHelperRepository _helperRepository { get; set; }
+        ILogger _logger { get; set; }
         RedisHandler _redisHandler { get; set; }
-        JwtSecurityToken userdata { get; set; }
         IConfiguration _configuration { get; set; }
 
-
-
-
-        bool Check(StringValues token);
+        JwtSecurityToken getToken(StringValues token);
         void Commit();
     }
 }

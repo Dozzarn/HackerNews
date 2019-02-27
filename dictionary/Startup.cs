@@ -46,6 +46,17 @@ namespace dictionary
                 };
 
             });
+            services.AddLogging(lb =>
+            {
+                lb.AddConfiguration(Configuration.GetSection("Logging"));
+                lb.AddFile(o => o.RootPath = AppContext.BaseDirectory);
+            });
+            services.AddCors(o => o.AddPolicy("MyPolicy", builder =>
+            {
+                builder.AllowAnyOrigin()
+                       .AllowAnyMethod()
+                       .AllowAnyHeader();
+            }));
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Info
@@ -89,7 +100,8 @@ namespace dictionary
                 app.UseHsts();
             }
             //app.UseHttpsRedirection();
-            app.UseMvcWithDefaultRoute();
+            app.UseCors("MyPolicy");
+            app.UseAuthentication();
             app.UseDeveloperExceptionPage();
             app.UseSwagger();
             app.UseSwaggerUI(c =>
@@ -97,7 +109,8 @@ namespace dictionary
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
                 c.RoutePrefix = "swagger";
             });
-            
+            app.UseMvcWithDefaultRoute();
+
         }
     }
 }

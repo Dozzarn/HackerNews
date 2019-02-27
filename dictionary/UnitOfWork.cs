@@ -9,7 +9,9 @@ using System.Threading.Tasks;
 using dictionary.Helpers;
 using dictionary.Repository;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
+using Newtonsoft.Json;
 
 namespace dictionary
 {
@@ -25,24 +27,21 @@ namespace dictionary
         public RedisHandler _redisHandler { get; set; }
         public IEntryRepository _entryRepository { get; set; }
         public IGenericRepository<T> _genericRepository { get; set; }
-
+        public  ILogger _logger { get; set; }
         public IConfiguration _configuration { get; set; }
         public JwtSecurityTokenHandler _tokenHandler { get; set; }
+        public IHelperRepository _helperRepository { get; set; }
 
         private bool disposedValue = false; // To detect redundant calls
-
-        public JwtSecurityToken userdata { get; set; }
-
-
         public UnitOfWork(IConfiguration configuration)
         {
             _redisHandler = new RedisHandler();
             _configuration = configuration;
+            //_redisHandler = new RedisHandler(_configuration);
+
             _connection = new SqlConnection(_configuration.GetSection("Appsettings:ConnectionString").Value);
             _connection.Open();
             _transaction = _connection.BeginTransaction();
-
-
 
 
 
@@ -51,20 +50,17 @@ namespace dictionary
             _authRepository = new AuthRepository(_transaction);
             _titleRepository = new TitleRepository(_transaction);
             _entryRepository = new EntryRepository(_transaction);
+            _helperRepository = new HelperRepository(_transaction);
+
 
         }
 
-        public bool Check(StringValues token)
+        public JwtSecurityToken getToken(StringValues token)
         {
-            var accesToken = token;
-            if (accesToken.ToString() == null)
-            {
-                return false;
-            }
-            userdata = _tokenHandler.ReadToken(accesToken) as JwtSecurityToken;
-            return true;
+            return _tokenHandler.ReadToken(token.ToString().Replace("Bearer ", "")) as JwtSecurityToken;
         }
 
+        
 
         public void Commit()
         {
@@ -89,6 +85,7 @@ namespace dictionary
         {
             _authRepository = null;
             _titleRepository = null;
+            _helperRepository = null;
             _entryRepository = null;
             _genericRepository = null;
 
@@ -135,7 +132,7 @@ namespace dictionary
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             Dispose(true);
             // TODO: uncomment the following line if the finalizer is overridden above.
-            //GC.SuppressFinalize(this);
+            GC.SuppressFinalize(this);
         }
         #endregion
 
